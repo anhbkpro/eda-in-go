@@ -52,7 +52,7 @@ func (Module) Startup(ctx context.Context, mono monolith.Monolith) (err error) {
 	var app application.App
 	app = application.New(orders, customers, payments, shopping, eventStream)
 	app = logging.LogApplicationAccess(app, mono.Logger())
-	integrationEventHandlers := logging.LogEventHandlerAccess[ddd.AggregateEvent](
+	integrationEventHandlers := logging.LogEventHandlerAccess(
 		application.NewIntegrationEventHandlers(eventStream),
 		"IntegrationEvents", mono.Logger(),
 	)
@@ -95,5 +95,6 @@ func registrations(reg registry.Registry) error {
 	if err := serde.RegisterKey(domain.OrderV1{}.SnapshotName(), domain.OrderV1{}); err != nil {
 		return err
 	}
+
 	return nil
 }

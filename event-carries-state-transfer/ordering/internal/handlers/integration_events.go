@@ -5,9 +5,9 @@ import (
 	"eda-in-golang/ordering/internal/domain"
 )
 
-func RegisterIntegrationEventHandlers(handlers ddd.EventHandler[ddd.AggregateEvent], dispatcher *ddd.EventDispatcher[ddd.AggregateEvent]) {
+func RegisterIntegrationEventHandlers(eventHandlers ddd.EventHandler[ddd.AggregateEvent], dispatcher *ddd.EventDispatcher[ddd.AggregateEvent]) {
 	dispatcher.Subscribe(
-		handlers,
+		eventHandlers,
 		domain.OrderCreatedEvent,
 		domain.OrderReadiedEvent,
 		domain.OrderCanceledEvent,
