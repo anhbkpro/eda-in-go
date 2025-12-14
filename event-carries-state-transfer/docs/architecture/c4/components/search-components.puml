@@ -1,0 +1,31 @@
+@startuml
+!include ../shared/includes.puml
+!include ../shared/layout.puml
+!include ../shared/styles.puml
+
+Container(search, "Search Service", "API")
+
+Component(api, "Search API", "HTTP",
+  "Handles search queries")
+
+Component(indexer, "Indexer", "Worker",
+  "Consumes events and updates index")
+
+Component(queryEngine, "Query Engine", "Service",
+  "Executes search queries")
+
+Component(cache, "Cache", "Redis",
+  "Caches frequent searches")
+
+ComponentDb(searchDb, "Search Index", "Elasticsearch")
+
+Rel(api, queryEngine, "Uses")
+Rel(queryEngine, cache, "Reads/Writes")
+Rel(queryEngine, searchDb, "Queries")
+
+Rel(indexer, searchDb, "Writes")
+Rel_D(customers, indexer, "Customer events")
+Rel_D(orderProcessing, indexer, "Order events")
+Rel_D(stores, indexer, "Store & product events")
+
+@enduml

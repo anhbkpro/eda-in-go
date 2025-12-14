@@ -1,0 +1,12 @@
+@startuml
+!include ../shared/includes.puml
+!include ../shared/layout.puml
+!include ../shared/styles.puml
+
+Person(user, "User", "Searches orders, customers, and products")
+
+System(system, "Commerce Platform", "Microservices-based commerce system")
+
+Rel(user, system, "Uses")
+
+@enduml

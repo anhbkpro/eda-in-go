@@ -1,0 +1,4 @@
+skinparam shadowing false
+skinparam ArrowColor black
+skinparam ArrowThickness 1
+skinparam defaultFontName Arial

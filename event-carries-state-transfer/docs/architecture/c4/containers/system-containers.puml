@@ -1,0 +1,22 @@
+@startuml
+!include ../shared/includes.puml
+!include ../shared/layout.puml
+!include ../shared/styles.puml
+
+Container(customers, "Customers Service", "API",
+  "Manages customer information")
+
+Container(orderProcessing, "Order Processing Service", "API",
+  "Processes orders and tracks status")
+
+Container(stores, "Stores Service", "API",
+  "Manages stores and product catalog")
+
+Container(search, "Search Service", "API",
+  "Indexes and aggregates searchable data")
+
+Rel_D(customers, search, "Customer names")
+Rel_D(orderProcessing, search, "Order data & status")
+Rel_D(stores, search, "Store & product names")
+
+@enduml

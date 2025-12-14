@@ -1,0 +1,48 @@
+package grpc
+
+import (
+	"context"
+	"eda-in-golang/depot/depotpb"
+	"eda-in-golang/ordering/internal/domain"
+
+	"google.golang.org/grpc"
+)
+
+type ShoppingRepository struct {
+	client depotpb.DepotServiceClient
+}
+
+var _ domain.ShoppingRepository = (*ShoppingRepository)(nil)
+
+func NewShoppingRepository(conn *grpc.ClientConn) domain.ShoppingRepository {
+	return &ShoppingRepository{
+		client: depotpb.NewDepotServiceClient(conn),
+	}
+}
+
+func (r *ShoppingRepository) Create(ctx context.Context, orderID string, orderItems []domain.Item) (string, error) {
+	items := make([]*depotpb.OrderItem, len(orderItems))
+	for i, item := range orderItems {
+		items[i] = r.itemFromDomain(item)
+	}
+	_, err := r.client.CreateShoppingList(ctx, &depotpb.CreateShoppingListRequest{
+		OrderId: orderID,
+		Items:   items,
+	})
+	return "", err
+}
+
+func (r *ShoppingRepository) Cancel(ctx context.Context, shoppingID string) error {
+	_, err := r.client.CancelShoppingList(ctx, &depotpb.CancelShoppingListRequest{
+		Id: shoppingID,
+	})
+	return err
+}
+
+func (r *ShoppingRepository) itemFromDomain(item domain.Item) *depotpb.OrderItem {
+	return &depotpb.OrderItem{
+		ProductId: item.ProductID,
+		StoreId:   item.StoreID,
+		Quantity:  int32(item.Quantity),
+	}
+}

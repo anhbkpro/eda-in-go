@@ -1,0 +1,14 @@
+@startuml
+!include ../shared/includes.puml
+!include ../shared/layout.puml
+!include ../shared/styles.puml
+
+Container(search, "Search Service", "API",
+  "Provides search across customers, orders, and products")
+
+ContainerDb(searchDb, "Search Index", "Elasticsearch / OpenSearch",
+  "Stores indexed documents")
+
+Rel(search, searchDb, "Reads/Writes indexed data")
+
+@enduml

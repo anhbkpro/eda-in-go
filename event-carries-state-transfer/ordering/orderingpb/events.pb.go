@@ -382,8 +382,8 @@ const file_orderingpb_events_proto_rawDesc = "" +
 	"\vcustomer_id\x18\x02 \x01(\tR\n" +
 	"customerId\x12\x1d\n" +
 	"\n" +
-	"payment_id\x18\x03 \x01(\tR\tpaymentIdB\xb3\x01\n" +
-	"\fcom.orderingB\vEventsProtoP\x01ZVgithub.com/anhbkpro/event-driven-architecture-in-golang/ordering/orderingpb/orderingpb\xa2\x02\x03OXX\xaa\x02\bOrdering\xca\x02\bOrdering\xe2\x02\x14Ordering\\GPBMetadata\xea\x02\bOrderingb\x06proto3"
+	"payment_id\x18\x03 \x01(\tR\tpaymentIdB\x89\x01\n" +
+	"\fcom.orderingB\vEventsProtoP\x01Z,eda-in-golang/ordering/orderingpb/orderingpb\xa2\x02\x03OXX\xaa\x02\bOrdering\xca\x02\bOrdering\xe2\x02\x14Ordering\\GPBMetadata\xea\x02\bOrderingb\x06proto3"
 
 var (
 	file_orderingpb_events_proto_rawDescOnce sync.Once
