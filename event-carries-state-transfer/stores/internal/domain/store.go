@@ -34,6 +34,7 @@ func NewStore(id string) *Store {
 	}
 }
 
+// CreateStore() for command CreateStore(ctx context.Context, cmd commands.CreateStore) error
 func CreateStore(id, name, location string) (*Store, error) {
 	if name == "" {
 		return nil, ErrStoreNameIsBlank

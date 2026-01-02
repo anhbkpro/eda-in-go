@@ -40,18 +40,46 @@ type (
 
 	appCommands struct {
 		commands.AddProductHandler
+		commands.CreateStoreHandler
+		commands.DecreaseProductPriceHandler
+		commands.IncreaseProductPriceHandler
+		commands.EnableParticipationHandler
+		commands.DisableParticipationHandler
+		commands.RebrandStoreHandler
+		commands.RebrandProductHandler
+		commands.RemoveProductHandler
 	}
 
 	appQueries struct {
+		queries.GetCatalogHandler
+		queries.GetStoreHandler
+		queries.GetParticipatingStoresHandler
+		queries.GetProductHandler
+		queries.GetStoresHandler
 	}
 )
 
 var _ App = (*Application)(nil)
 
-func New(products domain.ProductRepository) *Application {
+func New(products domain.ProductRepository, stores domain.StoreRepository, mall domain.MallRepository, catalog domain.CatalogRepository) *Application {
 	return &Application{
-		appCommands: {
-			commands.AddProductHandler: commands.NewAddProductHandler(products),
+		appCommands: appCommands{
+			AddProductHandler:           commands.NewAddProductHandler(products),
+			CreateStoreHandler:          commands.NewCreateStoreHandler(stores),
+			DecreaseProductPriceHandler: commands.NewDecreaseProductPriceHandler(products),
+			IncreaseProductPriceHandler: commands.NewIncreaseProductPriceHandler(products),
+			EnableParticipationHandler:  commands.NewEnableParticipationHandler(stores),
+			DisableParticipationHandler: commands.NewDisableParticipationHandler(stores),
+			RebrandStoreHandler:         commands.NewRebrandStoreHandler(stores),
+			RebrandProductHandler:       commands.NewRebrandProductHandler(products),
+			RemoveProductHandler:        commands.NewRemoveProductHandler(products),
+		},
+		appQueries: appQueries{
+			GetCatalogHandler:             queries.NewGetCatalogHandler(catalog),
+			GetStoreHandler:               queries.NewGetStoreHandler(mall),
+			GetParticipatingStoresHandler: queries.NewGetParticipatingStoresHandler(mall),
+			GetProductHandler:             queries.NewGetProductHandler(catalog),
+			GetStoresHandler:              queries.NewGetStoresHandler(mall),
 		},
 	}
 }

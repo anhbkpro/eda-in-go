@@ -9,6 +9,7 @@ import (
 )
 
 type (
+	// Command Object is in the same file with Handler
 	AddProduct struct {
 		ID          string
 		StoreID     string
@@ -29,6 +30,8 @@ func NewAddProductHandler(products domain.ProductRepository) AddProductHandler {
 	}
 }
 
+// This is the handler method for the AddProduct command
+// Flow: Handler -> Command -> Domain -> Event Bus
 func (h AddProductHandler) AddProduct(ctx context.Context, cmd AddProduct) error {
 	product, err := domain.CreateProduct(cmd.ID, cmd.StoreID, cmd.Name, cmd.Description, cmd.SKU, cmd.Price)
 	if err != nil {
