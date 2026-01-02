@@ -61,7 +61,12 @@ type (
 
 var _ App = (*Application)(nil)
 
-func New(products domain.ProductRepository, stores domain.StoreRepository, mall domain.MallRepository, catalog domain.CatalogRepository) *Application {
+func New(
+	stores domain.StoreRepository,
+	products domain.ProductRepository,
+	catalog domain.CatalogRepository,
+	mall domain.MallRepository,
+) *Application {
 	return &Application{
 		appCommands: appCommands{
 			AddProductHandler:           commands.NewAddProductHandler(products),
