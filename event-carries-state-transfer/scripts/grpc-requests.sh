@@ -1,5 +1,5 @@
 #!/bin/bash
-# gRPC Request Examples for Stores Service
+# gRPC Request Examples for Stores and Customers Services
 # Usage: ./grpc-requests.sh <command> [args]
 #
 # Make executable: chmod +x scripts/grpc-requests.sh
@@ -155,6 +155,57 @@ remove_product() {
 }
 
 # ============================================================================
+# CUSTOMER COMMANDS
+# ============================================================================
+
+# Register a new customer
+# Usage: ./grpc-requests.sh register-customer "Name" "+1234567890"
+register_customer() {
+    local name="${1:-John Doe}"
+    local sms_number="${2:-+1234567890}"
+    grpcurl -plaintext -d "{
+        \"name\": \"$name\",
+        \"sms_number\": \"$sms_number\"
+    }" "$GRPC_HOST" customerspb.CustomersService/RegisterCustomer
+}
+
+# Get a customer by ID
+# Usage: ./grpc-requests.sh get-customer <customer_id>
+get_customer() {
+    local customer_id="$1"
+    grpcurl -plaintext -d "{
+        \"id\": \"$customer_id\"
+    }" "$GRPC_HOST" customerspb.CustomersService/GetCustomer
+}
+
+# Authorize a customer
+# Usage: ./grpc-requests.sh authorize-customer <customer_id>
+authorize_customer() {
+    local customer_id="$1"
+    grpcurl -plaintext -d "{
+        \"id\": \"$customer_id\"
+    }" "$GRPC_HOST" customerspb.CustomersService/AuthorizeCustomer
+}
+
+# Enable a customer
+# Usage: ./grpc-requests.sh enable-customer <customer_id>
+enable_customer() {
+    local customer_id="$1"
+    grpcurl -plaintext -d "{
+        \"id\": \"$customer_id\"
+    }" "$GRPC_HOST" customerspb.CustomersService/EnableCustomer
+}
+
+# Disable a customer
+# Usage: ./grpc-requests.sh disable-customer <customer_id>
+disable_customer() {
+    local customer_id="$1"
+    grpcurl -plaintext -d "{
+        \"id\": \"$customer_id\"
+    }" "$GRPC_HOST" customerspb.CustomersService/DisableCustomer
+}
+
+# ============================================================================
 # UTILITY
 # ============================================================================
 
@@ -171,7 +222,7 @@ describe_service() {
 
 # Show help
 show_help() {
-    echo "gRPC Request Examples for Stores Service"
+    echo "gRPC Request Examples for Stores and Customers Services"
     echo ""
     echo "Usage: $0 <command> [args]"
     echo ""
@@ -192,6 +243,13 @@ show_help() {
     echo "  increase-price <id> <amount>       Increase product price"
     echo "  decrease-price <id> <amount>       Decrease product price"
     echo "  remove-product <product_id>        Remove a product"
+    echo ""
+    echo "Customer Commands:"
+    echo "  register-customer [name] [sms]     Register a new customer"
+    echo "  get-customer <customer_id>         Get customer by ID"
+    echo "  authorize-customer <customer_id>   Authorize a customer"
+    echo "  enable-customer <customer_id>      Enable a customer"
+    echo "  disable-customer <customer_id>     Disable a customer"
     echo ""
     echo "Utility Commands:"
     echo "  list-services                      List all gRPC services"
@@ -218,6 +276,11 @@ case "${1:-help}" in
     increase-price)         shift; increase_price "$@" ;;
     decrease-price)         shift; decrease_price "$@" ;;
     remove-product)         shift; remove_product "$@" ;;
+    register-customer)      shift; register_customer "$@" ;;
+    get-customer)           shift; get_customer "$@" ;;
+    authorize-customer)     shift; authorize_customer "$@" ;;
+    enable-customer)        shift; enable_customer "$@" ;;
+    disable-customer)       shift; disable_customer "$@" ;;
     list-services)          list_services ;;
     describe-service)       shift; describe_service "$@" ;;
     help|--help|-h)         show_help ;;

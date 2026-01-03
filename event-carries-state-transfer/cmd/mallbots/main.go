@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	// "eda-in-golang/baskets"
+	"eda-in-golang/customers"
 	"eda-in-golang/internal/config"
 	"eda-in-golang/internal/logger"
 
@@ -76,7 +77,7 @@ func run() (err error) {
 	// init modules
 	m.modules = []monolith.Module{
 		// &baskets.Module{},
-		// &customers.Module{},
+		&customers.Module{},
 		// &depot.Module{},
 		// &notifications.Module{},
 		&ordering.Module{},
