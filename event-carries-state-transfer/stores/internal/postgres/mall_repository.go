@@ -38,12 +38,10 @@ func (r MallRepository) Find(ctx context.Context, storeID string) (*domain.MallS
 	const query = "SELECT id, name, location, participating FROM %s WHERE id = $1"
 
 	// create output
-	store := &domain.MallStore{
-		ID: storeID,
-	}
+	store := &domain.MallStore{}
 
 	// execute query
-	err := r.db.QueryRowContext(ctx, r.table(query), storeID).Scan(&store.Name, &store.Location, &store.Participating)
+	err := r.db.QueryRowContext(ctx, r.table(query), storeID).Scan(&store.ID, &store.Name, &store.Location, &store.Participating)
 	if err != nil {
 		return nil, err
 	}
