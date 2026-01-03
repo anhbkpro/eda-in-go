@@ -21,6 +21,10 @@ import (
 
 type Module struct{}
 
+func (Module) Name() string {
+	return "stores"
+}
+
 func (m *Module) Startup(ctx context.Context, mono monolith.Monolith) (err error) {
 	// setup Driven adapters (Driven: Who your system depends on)
 	reg := registry.New()

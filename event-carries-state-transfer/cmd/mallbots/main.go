@@ -26,7 +26,7 @@ import (
 	// "eda-in-golang/notifications"
 	"eda-in-golang/ordering"
 	// "eda-in-golang/search"
-	// "eda-in-golang/stores"
+	"eda-in-golang/stores"
 )
 
 func main() {
@@ -81,7 +81,7 @@ func run() (err error) {
 		// &notifications.Module{},
 		&ordering.Module{},
 		// &payments.Module{},
-		// &stores.Module{},
+		&stores.Module{},
 		// &search.Module{},
 	}
 

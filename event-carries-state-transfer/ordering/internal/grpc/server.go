@@ -26,7 +26,7 @@ func RegisterServer(app application.App, registrar grpc.ServiceRegistrar) error 
 }
 
 func (s server) CreateOrder(ctx context.Context, request *orderingpb.CreateOrderRequest) (*orderingpb.CreateOrderResponse, error) {
-	id := uuid.New().String()
+	id := uuid.NewString()
 
 	items := make([]domain.Item, len(request.Items))
 	for i, item := range request.Items {

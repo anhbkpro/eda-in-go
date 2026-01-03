@@ -33,7 +33,7 @@ func NewEvent(name string, payload EventPayload, options ...EventOption) event {
 
 func newEvent(name string, payload EventPayload, options ...EventOption) event {
 	evt := event{
-		Entity:     NewEntity(uuid.New().String(), name),
+		Entity:     NewEntity(uuid.NewString(), name),
 		payload:    payload,
 		metadata:   make(Metadata),
 		occurredAt: time.Now(),

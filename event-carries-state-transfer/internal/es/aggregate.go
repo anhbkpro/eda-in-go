@@ -29,6 +29,13 @@ func NewAggregate(id, name string) Aggregate {
 	}
 }
 
+func (a *Aggregate) AddEvent(name string, payload ddd.EventPayload, options ...ddd.EventOption) {
+	options = append(options, ddd.Metadata{
+		ddd.AggregateVersionKey: a.PendingVersion() + 1,
+	})
+	a.Aggregate.AddEvent(name, payload, options...)
+}
+
 func (a *Aggregate) CommitEvents() {
 	a.version += len(a.Events())
 	a.Aggregate.ClearEvents()

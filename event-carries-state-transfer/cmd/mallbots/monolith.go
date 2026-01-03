@@ -64,6 +64,7 @@ func (a *app) startupModules() error {
 		if err := module.Startup(a.Waiter().Context(), a); err != nil {
 			return err
 		}
+		fmt.Printf("--> %s module started\n", module.Name())
 	}
 
 	return nil

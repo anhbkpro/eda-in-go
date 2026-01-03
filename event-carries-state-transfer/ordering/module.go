@@ -20,6 +20,10 @@ import (
 
 type Module struct{}
 
+func (Module) Name() string {
+	return "ordering"
+}
+
 func (Module) Startup(ctx context.Context, mono monolith.Monolith) (err error) {
 	// setup Driven adapters
 	reg := registry.New()

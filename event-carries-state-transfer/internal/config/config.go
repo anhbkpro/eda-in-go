@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
-
 	"github.com/stackus/dotenv"
 
 	"eda-in-golang/internal/rpc"
