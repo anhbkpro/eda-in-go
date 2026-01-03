@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"eda-in-golang/stores/internal/domain"
+	"fmt"
 
 	"github.com/stackus/errors"
 )
@@ -41,15 +42,25 @@ func (h IncreaseProductPriceHandler) Handle(ctx context.Context, cmd IncreasePro
 }
 
 func (h IncreaseProductPriceHandler) IncreaseProductPrice(ctx context.Context, cmd IncreaseProductPrice) error {
+	fmt.Println("[Step 4] Handler.IncreaseProductPrice: received command")
+
+	fmt.Println("[Step 5] Handler → Repo.Load: loading product aggregate")
 	product, err := h.products.Load(ctx, cmd.ID)
 	if err != nil {
 		return errors.Wrap(err, "error loading product")
 	}
+	fmt.Println("[Step 9] Repo → Handler: product loaded successfully")
 
+	fmt.Println("[Step 10] Handler → Product.IncreasePrice: calling domain logic")
 	err = product.IncreasePrice(cmd.Price)
 	if err != nil {
 		return errors.Wrap(err, "error increasing product price")
 	}
+	fmt.Println("[Step 11] Product.AddEvent: ProductPriceIncreasedEvent added")
 
-	return errors.Wrap(h.products.Save(ctx, product), "error saving product")
+	fmt.Println("[Step 12] Handler → Repo.Save: saving product aggregate")
+	err = h.products.Save(ctx, product)
+	fmt.Println("[Step 25] Repo → Handler: save completed")
+
+	return errors.Wrap(err, "error saving product")
 }

@@ -44,6 +44,8 @@ func (r CatalogRepository) Rebrand(ctx context.Context, productID, name, descrip
 }
 
 func (r CatalogRepository) UpdatePrice(ctx context.Context, productID string, delta float64) error {
+	fmt.Printf("[Step 21] CatalogRepo: UPDATE %s SET price = price + %.2f WHERE id = %s\n", r.tableName, delta, productID)
+
 	// build query
 	const query = "UPDATE %s SET price = price + $1 WHERE id = $2"
 
