@@ -70,25 +70,25 @@ func (p *Product) Rebrand(name, description string) error {
 	return nil
 }
 
-func (p *Product) IncreasePrice(price float64) error {
-	if price < p.Price {
+func (p *Product) IncreasePrice(newPrice float64) error {
+	if newPrice < p.Price {
 		return ErrNotAPriceIncrease
 	}
 
 	p.AddEvent(ProductPriceIncreasedEvent, &ProductPriceChanged{
-		Delta: price + p.Price,
+		Delta: newPrice - p.Price, // positive delta
 	})
 
 	return nil
 }
 
-func (p *Product) DecreasePrice(price float64) error {
-	if price > p.Price {
+func (p *Product) DecreasePrice(newPrice float64) error {
+	if newPrice > p.Price {
 		return ErrNotAPriceDecrease
 	}
 
 	p.AddEvent(ProductPriceDecreasedEvent, &ProductPriceChanged{
-		Delta: price - p.Price,
+		Delta: newPrice - p.Price, // negative delta
 	})
 
 	return nil
