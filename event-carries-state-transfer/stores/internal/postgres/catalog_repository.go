@@ -70,12 +70,10 @@ func (r CatalogRepository) Find(ctx context.Context, productID string) (*domain.
 	const query = "SELECT id, store_id, name, description, sku, price FROM %s WHERE id = $1"
 
 	// create output
-	product := &domain.CatalogProduct{
-		ID: productID,
-	}
+	product := &domain.CatalogProduct{}
 
 	// execute query
-	err := r.db.QueryRowContext(ctx, r.table(query), productID).Scan(&product.StoreID, &product.Name, &product.Description, &product.SKU, &product.Price)
+	err := r.db.QueryRowContext(ctx, r.table(query), productID).Scan(&product.ID, &product.StoreID, &product.Name, &product.Description, &product.SKU, &product.Price)
 	if err != nil {
 		return nil, err
 	}

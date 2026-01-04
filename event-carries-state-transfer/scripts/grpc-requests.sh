@@ -1,5 +1,5 @@
 #!/bin/bash
-# gRPC Request Examples for Stores and Customers Services
+# gRPC Request Examples for Stores, Customers, and Baskets Services
 # Usage: ./grpc-requests.sh <command> [args]
 #
 # Make executable: chmod +x scripts/grpc-requests.sh
@@ -206,6 +206,74 @@ disable_customer() {
 }
 
 # ============================================================================
+# BASKET COMMANDS
+# ============================================================================
+
+# Start a new basket for a customer
+# Usage: ./grpc-requests.sh start-basket <customer_id>
+start_basket() {
+    local customer_id="$1"
+    grpcurl -plaintext -d "{
+        \"customer_id\": \"$customer_id\"
+    }" "$GRPC_HOST" basketspb.BasketService/StartBasket
+}
+
+# Get a basket by ID
+# Usage: ./grpc-requests.sh get-basket <basket_id>
+get_basket() {
+    local basket_id="$1"
+    grpcurl -plaintext -d "{
+        \"id\": \"$basket_id\"
+    }" "$GRPC_HOST" basketspb.BasketService/GetBasket
+}
+
+# Cancel a basket
+# Usage: ./grpc-requests.sh cancel-basket <basket_id>
+cancel_basket() {
+    local basket_id="$1"
+    grpcurl -plaintext -d "{
+        \"id\": \"$basket_id\"
+    }" "$GRPC_HOST" basketspb.BasketService/CancelBasket
+}
+
+# Checkout a basket
+# Usage: ./grpc-requests.sh checkout-basket <basket_id> <payment_id>
+checkout_basket() {
+    local basket_id="$1"
+    local payment_id="$2"
+    grpcurl -plaintext -d "{
+        \"id\": \"$basket_id\",
+        \"payment_id\": \"$payment_id\"
+    }" "$GRPC_HOST" basketspb.BasketService/CheckoutBasket
+}
+
+# Add an item to a basket
+# Usage: ./grpc-requests.sh add-item <basket_id> <product_id> <quantity>
+add_item() {
+    local basket_id="$1"
+    local product_id="$2"
+    local quantity="${3:-1}"
+    grpcurl -plaintext -d "{
+        \"id\": \"$basket_id\",
+        \"product_id\": \"$product_id\",
+        \"quantity\": $quantity
+    }" "$GRPC_HOST" basketspb.BasketService/AddItem
+}
+
+# Remove an item from a basket
+# Usage: ./grpc-requests.sh remove-item <basket_id> <product_id> <quantity>
+remove_item() {
+    local basket_id="$1"
+    local product_id="$2"
+    local quantity="${3:-1}"
+    grpcurl -plaintext -d "{
+        \"id\": \"$basket_id\",
+        \"product_id\": \"$product_id\",
+        \"quantity\": $quantity
+    }" "$GRPC_HOST" basketspb.BasketService/RemoveItem
+}
+
+# ============================================================================
 # UTILITY
 # ============================================================================
 
@@ -222,7 +290,7 @@ describe_service() {
 
 # Show help
 show_help() {
-    echo "gRPC Request Examples for Stores and Customers Services"
+    echo "gRPC Request Examples for Stores, Customers, and Baskets Services"
     echo ""
     echo "Usage: $0 <command> [args]"
     echo ""
@@ -250,6 +318,14 @@ show_help() {
     echo "  authorize-customer <customer_id>   Authorize a customer"
     echo "  enable-customer <customer_id>      Enable a customer"
     echo "  disable-customer <customer_id>     Disable a customer"
+    echo ""
+    echo "Basket Commands:"
+    echo "  start-basket <customer_id>         Start a new basket"
+    echo "  get-basket <basket_id>             Get basket by ID"
+    echo "  cancel-basket <basket_id>          Cancel a basket"
+    echo "  checkout-basket <basket_id> <payment_id>  Checkout a basket"
+    echo "  add-item <basket_id> <product_id> [quantity]  Add item to basket"
+    echo "  remove-item <basket_id> <product_id> [quantity]  Remove item from basket"
     echo ""
     echo "Utility Commands:"
     echo "  list-services                      List all gRPC services"
@@ -281,6 +357,12 @@ case "${1:-help}" in
     authorize-customer)     shift; authorize_customer "$@" ;;
     enable-customer)        shift; enable_customer "$@" ;;
     disable-customer)       shift; disable_customer "$@" ;;
+    start-basket)           shift; start_basket "$@" ;;
+    get-basket)             shift; get_basket "$@" ;;
+    cancel-basket)          shift; cancel_basket "$@" ;;
+    checkout-basket)        shift; checkout_basket "$@" ;;
+    add-item)               shift; add_item "$@" ;;
+    remove-item)            shift; remove_item "$@" ;;
     list-services)          list_services ;;
     describe-service)       shift; describe_service "$@" ;;
     help|--help|-h)         show_help ;;
