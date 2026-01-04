@@ -1,5 +1,5 @@
 #!/bin/bash
-# gRPC Request Examples for Stores, Customers, Baskets, and Payments Services
+# gRPC Request Examples for Stores, Customers, Baskets, Payments, and Ordering Services
 # Usage: ./grpc-requests.sh <command> [args]
 #
 # Make executable: chmod +x scripts/grpc-requests.sh
@@ -340,6 +340,73 @@ cancel_invoice() {
 }
 
 # ============================================================================
+# ORDERING COMMANDS
+# ============================================================================
+
+# Create an order
+# Usage: ./grpc-requests.sh create-order <customer_id> <payment_id> <store_id> <product_id> <quantity> [price]
+create_order() {
+    local customer_id="$1"
+    local payment_id="$2"
+    local store_id="$3"
+    local product_id="$4"
+    local quantity="${5:-1}"
+    local price="${6:-10.00}"
+    local store_name="${7:-Store}"
+    local product_name="${8:-Product}"
+    grpcurl -plaintext -d "{
+        \"items\": [{
+            \"store_id\": \"$store_id\",
+            \"product_id\": \"$product_id\",
+            \"store_name\": \"$store_name\",
+            \"product_name\": \"$product_name\",
+            \"price\": $price,
+            \"quantity\": $quantity
+        }],
+        \"customer_id\": \"$customer_id\",
+        \"payment_id\": \"$payment_id\"
+    }" "$GRPC_HOST" orderingpb.OrderingService/CreateOrder
+}
+
+# Get an order by ID
+# Usage: ./grpc-requests.sh get-order <order_id>
+get_order() {
+    local order_id="$1"
+    grpcurl -plaintext -d "{
+        \"id\": \"$order_id\"
+    }" "$GRPC_HOST" orderingpb.OrderingService/GetOrder
+}
+
+# Cancel an order
+# Usage: ./grpc-requests.sh cancel-order <order_id>
+cancel_order() {
+    local order_id="$1"
+    grpcurl -plaintext -d "{
+        \"id\": \"$order_id\"
+    }" "$GRPC_HOST" orderingpb.OrderingService/CancelOrder
+}
+
+# Ready an order
+# Usage: ./grpc-requests.sh ready-order <order_id>
+ready_order() {
+    local order_id="$1"
+    grpcurl -plaintext -d "{
+        \"id\": \"$order_id\"
+    }" "$GRPC_HOST" orderingpb.OrderingService/ReadyOrder
+}
+
+# Complete an order
+# Usage: ./grpc-requests.sh complete-order <order_id> <invoice_id>
+complete_order() {
+    local order_id="$1"
+    local invoice_id="$2"
+    grpcurl -plaintext -d "{
+        \"id\": \"$order_id\",
+        \"invoice_id\": \"$invoice_id\"
+    }" "$GRPC_HOST" orderingpb.OrderingService/CompleteOrder
+}
+
+# ============================================================================
 # UTILITY
 # ============================================================================
 
@@ -356,7 +423,7 @@ describe_service() {
 
 # Show help
 show_help() {
-    echo "gRPC Request Examples for Stores, Customers, and Baskets Services"
+    echo "gRPC Request Examples for Stores, Customers, Baskets, Payments, and Ordering Services"
     echo ""
     echo "Usage: $0 <command> [args]"
     echo ""
@@ -401,6 +468,13 @@ show_help() {
     echo "  pay-invoice <invoice_id>            Pay an invoice"
     echo "  cancel-invoice <invoice_id>         Cancel an invoice"
     echo ""
+    echo "Ordering Commands:"
+    echo "  create-order <customer_id> <payment_id> <store_id> <product_id> [qty] [price]  Create an order"
+    echo "  get-order <order_id>                Get order by ID"
+    echo "  cancel-order <order_id>             Cancel an order"
+    echo "  ready-order <order_id>              Mark order as ready"
+    echo "  complete-order <order_id> <invoice_id>  Complete an order"
+    echo ""
     echo "Utility Commands:"
     echo "  list-services                      List all gRPC services"
     echo "  describe-service [service]         Describe a service"
@@ -443,6 +517,11 @@ case "${1:-help}" in
     adjust-invoice)         shift; adjust_invoice "$@" ;;
     pay-invoice)            shift; pay_invoice "$@" ;;
     cancel-invoice)         shift; cancel_invoice "$@" ;;
+    create-order)           shift; create_order "$@" ;;
+    get-order)              shift; get_order "$@" ;;
+    cancel-order)           shift; cancel_order "$@" ;;
+    ready-order)            shift; ready_order "$@" ;;
+    complete-order)         shift; complete_order "$@" ;;
     list-services)          list_services ;;
     describe-service)       shift; describe_service "$@" ;;
     help|--help|-h)         show_help ;;
