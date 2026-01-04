@@ -16,6 +16,7 @@ import (
 	// "eda-in-golang/baskets"
 	"eda-in-golang/baskets"
 	"eda-in-golang/customers"
+	"eda-in-golang/depot"
 	"eda-in-golang/internal/config"
 	"eda-in-golang/internal/logger"
 	"eda-in-golang/payments"
@@ -80,7 +81,7 @@ func run() (err error) {
 	m.modules = []monolith.Module{
 		&baskets.Module{},
 		&customers.Module{},
-		// &depot.Module{},
+		&depot.Module{},
 		// &notifications.Module{},
 		&ordering.Module{},
 		&payments.Module{},
