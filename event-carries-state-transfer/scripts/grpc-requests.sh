@@ -1,5 +1,5 @@
 #!/bin/bash
-# gRPC Request Examples for Stores, Customers, Baskets, Payments, and Ordering Services
+# gRPC Request Examples for Stores, Customers, Baskets, Payments, Ordering, and Depot Services
 # Usage: ./grpc-requests.sh <command> [args]
 #
 # Make executable: chmod +x scripts/grpc-requests.sh
@@ -407,6 +407,56 @@ complete_order() {
 }
 
 # ============================================================================
+# DEPOT COMMANDS
+# ============================================================================
+
+# Create a shopping list
+# Usage: ./grpc-requests.sh create-shopping-list <order_id> <product_id> <store_id> <quantity>
+create_shopping_list() {
+    local order_id="$1"
+    local product_id="$2"
+    local store_id="$3"
+    local quantity="${4:-1}"
+    grpcurl -plaintext -d "{
+        \"order_id\": \"$order_id\",
+        \"items\": [{
+            \"product_id\": \"$product_id\",
+            \"store_id\": \"$store_id\",
+            \"quantity\": $quantity
+        }]
+    }" "$GRPC_HOST" depotpb.DepotService/CreateShoppingList
+}
+
+# Cancel a shopping list
+# Usage: ./grpc-requests.sh cancel-shopping-list <shopping_list_id>
+cancel_shopping_list() {
+    local shopping_list_id="$1"
+    grpcurl -plaintext -d "{
+        \"id\": \"$shopping_list_id\"
+    }" "$GRPC_HOST" depotpb.DepotService/CancelShoppingList
+}
+
+# Assign a shopping list to a bot
+# Usage: ./grpc-requests.sh assign-shopping-list <shopping_list_id> <bot_id>
+assign_shopping_list() {
+    local shopping_list_id="$1"
+    local bot_id="$2"
+    grpcurl -plaintext -d "{
+        \"id\": \"$shopping_list_id\",
+        \"bot_id\": \"$bot_id\"
+    }" "$GRPC_HOST" depotpb.DepotService/AssignShoppingList
+}
+
+# Complete a shopping list
+# Usage: ./grpc-requests.sh complete-shopping-list <shopping_list_id>
+complete_shopping_list() {
+    local shopping_list_id="$1"
+    grpcurl -plaintext -d "{
+        \"id\": \"$shopping_list_id\"
+    }" "$GRPC_HOST" depotpb.DepotService/CompleteShoppingList
+}
+
+# ============================================================================
 # UTILITY
 # ============================================================================
 
@@ -423,7 +473,7 @@ describe_service() {
 
 # Show help
 show_help() {
-    echo "gRPC Request Examples for Stores, Customers, Baskets, Payments, and Ordering Services"
+    echo "gRPC Request Examples for Stores, Customers, Baskets, Payments, Ordering, and Depot Services"
     echo ""
     echo "Usage: $0 <command> [args]"
     echo ""
@@ -475,6 +525,12 @@ show_help() {
     echo "  ready-order <order_id>              Mark order as ready"
     echo "  complete-order <order_id> <invoice_id>  Complete an order"
     echo ""
+    echo "Depot Commands:"
+    echo "  create-shopping-list <order_id> <product_id> <store_id> [qty]  Create shopping list"
+    echo "  cancel-shopping-list <shopping_list_id>  Cancel shopping list"
+    echo "  assign-shopping-list <shopping_list_id> <bot_id>  Assign to bot"
+    echo "  complete-shopping-list <shopping_list_id>  Complete shopping list"
+    echo ""
     echo "Utility Commands:"
     echo "  list-services                      List all gRPC services"
     echo "  describe-service [service]         Describe a service"
@@ -522,6 +578,10 @@ case "${1:-help}" in
     cancel-order)           shift; cancel_order "$@" ;;
     ready-order)            shift; ready_order "$@" ;;
     complete-order)         shift; complete_order "$@" ;;
+    create-shopping-list)   shift; create_shopping_list "$@" ;;
+    cancel-shopping-list)   shift; cancel_shopping_list "$@" ;;
+    assign-shopping-list)   shift; assign_shopping_list "$@" ;;
+    complete-shopping-list) shift; complete_shopping_list "$@" ;;
     list-services)          list_services ;;
     describe-service)       shift; describe_service "$@" ;;
     help|--help|-h)         show_help ;;
