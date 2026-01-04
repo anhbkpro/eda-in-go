@@ -1,5 +1,5 @@
 #!/bin/bash
-# gRPC Request Examples for Stores, Customers, and Baskets Services
+# gRPC Request Examples for Stores, Customers, Baskets, and Payments Services
 # Usage: ./grpc-requests.sh <command> [args]
 #
 # Make executable: chmod +x scripts/grpc-requests.sh
@@ -274,6 +274,72 @@ remove_item() {
 }
 
 # ============================================================================
+# PAYMENT COMMANDS
+# ============================================================================
+
+# Authorize a payment
+# Usage: ./grpc-requests.sh authorize-payment <customer_id> <amount>
+authorize_payment() {
+    local customer_id="$1"
+    local amount="$2"
+    grpcurl -plaintext -d "{
+        \"customer_id\": \"$customer_id\",
+        \"amount\": $amount
+    }" "$GRPC_HOST" paymentspb.PaymentsService/AuthorizePayment
+}
+
+# Confirm a payment
+# Usage: ./grpc-requests.sh confirm-payment <payment_id>
+confirm_payment() {
+    local payment_id="$1"
+    grpcurl -plaintext -d "{
+        \"id\": \"$payment_id\"
+    }" "$GRPC_HOST" paymentspb.PaymentsService/ConfirmPayment
+}
+
+# Create an invoice
+# Usage: ./grpc-requests.sh create-invoice <order_id> <payment_id> <amount>
+create_invoice() {
+    local order_id="$1"
+    local payment_id="$2"
+    local amount="$3"
+    grpcurl -plaintext -d "{
+        \"order_id\": \"$order_id\",
+        \"payment_id\": \"$payment_id\",
+        \"amount\": $amount
+    }" "$GRPC_HOST" paymentspb.PaymentsService/CreateInvoice
+}
+
+# Adjust an invoice
+# Usage: ./grpc-requests.sh adjust-invoice <invoice_id> <amount>
+adjust_invoice() {
+    local invoice_id="$1"
+    local amount="$2"
+    grpcurl -plaintext -d "{
+        \"id\": \"$invoice_id\",
+        \"amount\": $amount
+    }" "$GRPC_HOST" paymentspb.PaymentsService/AdjustInvoice
+}
+
+# Pay an invoice
+# Usage: ./grpc-requests.sh pay-invoice <invoice_id>
+pay_invoice() {
+    local invoice_id="$1"
+    grpcurl -plaintext -d "{
+        \"id\": \"$invoice_id\"
+    }" "$GRPC_HOST" paymentspb.PaymentsService/PayInvoice
+}
+
+# Cancel an invoice
+# Usage: ./grpc-requests.sh cancel-invoice <invoice_id>
+cancel_invoice() {
+    local invoice_id="$1"
+    grpcurl -plaintext -d "{
+        \"id\": \"$invoice_id\"
+    }" "$GRPC_HOST" paymentspb.PaymentsService/CancelInvoice
+}
+
+# ============================================================================
 # UTILITY
 # ============================================================================
 
@@ -327,6 +393,14 @@ show_help() {
     echo "  add-item <basket_id> <product_id> [quantity]  Add item to basket"
     echo "  remove-item <basket_id> <product_id> [quantity]  Remove item from basket"
     echo ""
+    echo "Payment Commands:"
+    echo "  authorize-payment <customer_id> <amount>  Authorize a payment"
+    echo "  confirm-payment <payment_id>       Confirm a payment"
+    echo "  create-invoice <order_id> <payment_id> <amount>  Create an invoice"
+    echo "  adjust-invoice <invoice_id> <amount>  Adjust invoice amount"
+    echo "  pay-invoice <invoice_id>            Pay an invoice"
+    echo "  cancel-invoice <invoice_id>         Cancel an invoice"
+    echo ""
     echo "Utility Commands:"
     echo "  list-services                      List all gRPC services"
     echo "  describe-service [service]         Describe a service"
@@ -363,6 +437,12 @@ case "${1:-help}" in
     checkout-basket)        shift; checkout_basket "$@" ;;
     add-item)               shift; add_item "$@" ;;
     remove-item)            shift; remove_item "$@" ;;
+    authorize-payment)      shift; authorize_payment "$@" ;;
+    confirm-payment)        shift; confirm_payment "$@" ;;
+    create-invoice)         shift; create_invoice "$@" ;;
+    adjust-invoice)         shift; adjust_invoice "$@" ;;
+    pay-invoice)            shift; pay_invoice "$@" ;;
+    cancel-invoice)         shift; cancel_invoice "$@" ;;
     list-services)          list_services ;;
     describe-service)       shift; describe_service "$@" ;;
     help|--help|-h)         show_help ;;
