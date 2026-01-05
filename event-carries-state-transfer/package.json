@@ -1,0 +1,41 @@
+{
+  "name": "event-driven-architecture-in-golang",
+  "version": "1.0.0",
+  "description": "Event-driven architecture implementation in Go",
+  "scripts": {
+    "commitlint": "commitlint --edit $1",
+    "prepare": "git config core.hooksPath .husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3",
+    "husky": "^8.0.3"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
+    "rules": {
+      "type-enum": [
+        2,
+        "always",
+        [
+          "feat",
+          "fix",
+          "docs",
+          "style",
+          "refactor",
+          "test",
+          "chore",
+          "perf",
+          "ci",
+          "build",
+          "revert"
+        ]
+      ],
+      "subject-case": [0],
+      "subject-max-length": [2, "always", 100],
+      "body-max-line-length": [2, "always", 100]
+    }
+  }
+}

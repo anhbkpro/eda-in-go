@@ -1,5 +1,5 @@
-PHONY := install-tools generate
-all: install-tools generate
+PHONY := install-tools generate setup-hooks
+all: install-tools generate setup-hooks
 
 install-tools:
 	@echo installing tools
@@ -13,4 +13,10 @@ install-tools:
 generate:
 	@echo running code generation
 	@go generate ./...
+	@echo done
+
+setup-hooks:
+	@echo setting up git hooks
+	@echo "Run 'npm install' to install Node.js dependencies and configure git hooks"
+	@echo "This sets up commitlint for commit message validation"
 	@echo done
