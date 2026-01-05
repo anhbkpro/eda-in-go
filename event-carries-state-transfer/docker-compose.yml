@@ -1,39 +1,47 @@
 version: "3.8"
 
+# Port mappings updated to avoid conflicts:
+# - Monolith: 18081 (HTTP), 18086 (gRPC)
+# - PostgreSQL: 15432
+# - NATS: 14222
+
 services:
   monolith:
-    container_name: monolith
+    container_name: eda-in-go-monolith
     hostname: monolith
     build:
       context: .
       dockerfile: docker/Dockerfile
     ports:
-      - '8081:8081'
-      - '8086:8086'
+      - '18081:8081'
+      - '18086:8086'
     env_file:
       - docker/.env
+    environment:
+      - PG_CONN=postgres://mallbots_user:mallbots_pass@postgres:5432/mallbots?sslmode=disable
+      - NATS_URL=nats://nats:4222
     depends_on:
       - nats
       - postgres
-    command: [ "./wait-for", "postgres:5432", "--", "/mallbots/monolith" ]
+    command: [ "./wait-for", "postgres:15432", "--", "/mallbots/monolith" ]
   postgres:
-    container_name: postgres
+    container_name: eda-in-go-postgres
     hostname: postgres
     image: postgres:12-alpine
     restart: always
     environment:
       POSTGRES_PASSWORD: itsasecret
     ports:
-      - '5432:5432'
+      - '15432:5432'
     volumes:
       - 'pgdata:/var/lib/postgresql/data'
       - './docker/database:/docker-entrypoint-initdb.d'
   nats:
-    container_name: nats
+    container_name: eda-in-go-nats
     hostname: nats
     image: nats:2-alpine
     ports:
-      - '4222:4222'
+      - '14222:4222'
     command:
       - -js
       - -sd

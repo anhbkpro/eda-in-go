@@ -4,7 +4,7 @@
 #
 # Make executable: chmod +x scripts/grpc-requests.sh
 
-GRPC_HOST="${GRPC_HOST:-localhost:8086}"
+GRPC_HOST="${GRPC_HOST:-localhost:18086}"
 
 # ============================================================================
 # STORE COMMANDS
@@ -457,6 +457,144 @@ complete_shopping_list() {
 }
 
 # ============================================================================
+# MOCK DATA SETUP
+# ============================================================================
+
+# Create comprehensive mock data across all services
+# Usage: ./grpc-requests.sh create-all-mock-data
+create_all_mock_data() {
+    echo "🚀 Creating comprehensive mock data across all services..."
+    echo ""
+
+    # 1. Create a store
+    echo "🏪 Creating store..."
+    STORE_RESPONSE=$(create_store "Mock Coffee Shop" "123 Main St, Downtown" 2>&1)
+    echo "Debug - Store response: $STORE_RESPONSE"
+    STORE_ID=$(echo "$STORE_RESPONSE" | jq -r '.id' 2>/dev/null || echo "$STORE_RESPONSE" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
+    if [ -z "$STORE_ID" ] || [ "$STORE_ID" = "null" ] || [ "$STORE_ID" = "$STORE_RESPONSE" ]; then
+        echo "❌ Failed to create store or extract ID"
+        echo "Response was: $STORE_RESPONSE"
+        return 1
+    fi
+    echo "✅ Store created with ID: $STORE_ID"
+
+    # Enable store participation
+    echo "🔓 Enabling store participation..."
+    enable_participation "$STORE_ID" > /dev/null 2>&1 && echo "✅ Store participation enabled"
+
+    # Verify store creation
+    echo "🔍 Verifying store data..."
+    STORE_DATA=$(get_store "$STORE_ID" 2>/dev/null)
+    if echo "$STORE_DATA" | jq -e '.store' >/dev/null 2>&1; then
+        STORE_NAME=$(echo "$STORE_DATA" | jq -r '.store.name')
+        STORE_LOCATION=$(echo "$STORE_DATA" | jq -r '.store.location')
+        STORE_PARTICIPATING=$(echo "$STORE_DATA" | jq -r '.store.participating')
+        echo "✅ Store verified: $STORE_NAME at $STORE_LOCATION (participating: $STORE_PARTICIPATING)"
+    else
+        echo "⚠️  Could not verify store data, but continuing..."
+    fi
+    echo ""
+
+    # 2. Add products to the store
+    echo "☕ Adding products to store..."
+    PRODUCT1_ID=$(add_product "$STORE_ID" "Espresso" "Strong Italian coffee" "ESP-001" "4.50" | jq -r '.id')
+    PRODUCT2_ID=$(add_product "$STORE_ID" "Cappuccino" "Espresso with steamed milk" "CAP-002" "5.50" | jq -r '.id')
+    PRODUCT3_ID=$(add_product "$STORE_ID" "Latte" "Espresso with steamed milk and foam" "LAT-003" "5.75" | jq -r '.id')
+
+    if [ -z "$PRODUCT1_ID" ] || [ "$PRODUCT1_ID" = "null" ]; then
+        echo "❌ Failed to create products"
+        return 1
+    fi
+    echo "✅ Products created: Espresso ($PRODUCT1_ID), Cappuccino ($PRODUCT2_ID), Latte ($PRODUCT3_ID)"
+    echo ""
+
+    # 3. Register a customer
+    echo "👤 Registering customer..."
+    CUSTOMER_ID=$(register_customer "John Doe" "+1234567890" | jq -r '.id')
+    if [ -z "$CUSTOMER_ID" ] || [ "$CUSTOMER_ID" = "null" ]; then
+        echo "❌ Failed to register customer"
+        return 1
+    fi
+    echo "✅ Customer registered with ID: $CUSTOMER_ID"
+    echo ""
+
+    # 4. Start a basket for the customer
+    echo "🛒 Starting basket for customer..."
+    BASKET_ID=$(start_basket "$CUSTOMER_ID" | jq -r '.id')
+    if [ -z "$BASKET_ID" ] || [ "$BASKET_ID" = "null" ]; then
+        echo "❌ Failed to start basket"
+        return 1
+    fi
+    echo "✅ Basket started with ID: $BASKET_ID"
+    echo ""
+
+    # 5. Add items to the basket
+    echo "📦 Adding items to basket..."
+    add_item "$BASKET_ID" "$PRODUCT1_ID" "2" > /dev/null 2>&1 && echo "✅ Added 2x Espresso to basket"
+    add_item "$BASKET_ID" "$PRODUCT2_ID" "1" > /dev/null 2>&1 && echo "✅ Added 1x Cappuccino to basket"
+    echo ""
+
+    # 6. Authorize a payment
+    echo "💳 Authorizing payment..."
+    PAYMENT_ID=$(authorize_payment "$CUSTOMER_ID" "16.00" | jq -r '.id')
+    if [ -z "$PAYMENT_ID" ] || [ "$PAYMENT_ID" = "null" ]; then
+        echo "❌ Failed to authorize payment"
+        return 1
+    fi
+    echo "✅ Payment authorized with ID: $PAYMENT_ID"
+    echo ""
+
+    # 7. Checkout the basket
+    echo "🛍️  Checking out basket..."
+    checkout_basket "$BASKET_ID" "$PAYMENT_ID" > /dev/null 2>&1 && echo "✅ Basket checked out successfully"
+    echo ""
+
+    # 8. Create an order
+    echo "📋 Creating order..."
+    ORDER_ID=$(create_order "$CUSTOMER_ID" "$PAYMENT_ID" "$STORE_ID" "$PRODUCT1_ID" "2" "4.50" | jq -r '.order_id')
+    if [ -z "$ORDER_ID" ] || [ "$ORDER_ID" = "null" ]; then
+        echo "❌ Failed to create order"
+        return 1
+    fi
+    echo "✅ Order created with ID: $ORDER_ID"
+    echo ""
+
+    # 9. Create an invoice
+    echo "📄 Creating invoice..."
+    INVOICE_ID=$(create_invoice "$ORDER_ID" "$PAYMENT_ID" "16.00" | jq -r '.id')
+    if [ -z "$INVOICE_ID" ] || [ "$INVOICE_ID" = "null" ]; then
+        echo "❌ Failed to create invoice"
+        return 1
+    fi
+    echo "✅ Invoice created with ID: $INVOICE_ID"
+    echo ""
+
+    # 10. Create a shopping list
+    echo "📝 Creating shopping list..."
+    SHOPPING_LIST_ID=$(create_shopping_list "$ORDER_ID" "$PRODUCT1_ID" "$STORE_ID" "2" | jq -r '.id')
+    if [ -z "$SHOPPING_LIST_ID" ] || [ "$SHOPPING_LIST_ID" = "null" ]; then
+        echo "❌ Failed to create shopping list"
+        return 1
+    fi
+    echo "✅ Shopping list created with ID: $SHOPPING_LIST_ID"
+    echo ""
+
+    echo "🎉 Mock data creation completed successfully!"
+    echo ""
+    echo "📊 Summary:"
+    echo "   Store ID: $STORE_ID"
+    echo "   Products: Espresso ($PRODUCT1_ID), Cappuccino ($PRODUCT2_ID), Latte ($PRODUCT3_ID)"
+    echo "   Customer ID: $CUSTOMER_ID"
+    echo "   Basket ID: $BASKET_ID"
+    echo "   Payment ID: $PAYMENT_ID"
+    echo "   Order ID: $ORDER_ID"
+    echo "   Invoice ID: $INVOICE_ID"
+    echo "   Shopping List ID: $SHOPPING_LIST_ID"
+    echo ""
+    echo "💡 You can now test individual operations or run end-to-end workflows!"
+}
+
+# ============================================================================
 # UTILITY
 # ============================================================================
 
@@ -531,6 +669,9 @@ show_help() {
     echo "  assign-shopping-list <shopping_list_id> <bot_id>  Assign to bot"
     echo "  complete-shopping-list <shopping_list_id>  Complete shopping list"
     echo ""
+    echo "Mock Data Commands:"
+    echo "  create-all-mock-data                        Create comprehensive mock data across all services"
+    echo ""
     echo "Utility Commands:"
     echo "  list-services                      List all gRPC services"
     echo "  describe-service [service]         Describe a service"
@@ -582,6 +723,7 @@ case "${1:-help}" in
     cancel-shopping-list)   shift; cancel_shopping_list "$@" ;;
     assign-shopping-list)   shift; assign_shopping_list "$@" ;;
     complete-shopping-list) shift; complete_shopping_list "$@" ;;
+    create-all-mock-data)   create_all_mock_data ;;
     list-services)          list_services ;;
     describe-service)       shift; describe_service "$@" ;;
     help|--help|-h)         show_help ;;
