@@ -6,7 +6,7 @@ import (
 
 type WebConfig struct {
 	Host string `default:"0.0.0.0"`
-	Port string `default:":8081"`
+	Port string `default:":18081"`
 }
 
 func (c WebConfig) Address() string {

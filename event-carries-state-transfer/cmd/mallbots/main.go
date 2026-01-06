@@ -19,6 +19,7 @@ import (
 	"eda-in-golang/depot"
 	"eda-in-golang/internal/config"
 	"eda-in-golang/internal/logger"
+	"eda-in-golang/notifications"
 	"eda-in-golang/payments"
 
 	// "eda-in-golang/internal/logger"
@@ -82,7 +83,7 @@ func run() (err error) {
 		&baskets.Module{},
 		&customers.Module{},
 		&depot.Module{},
-		// &notifications.Module{},
+		&notifications.Module{},
 		&ordering.Module{},
 		&payments.Module{},
 		&stores.Module{},
