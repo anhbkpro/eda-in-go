@@ -36,6 +36,11 @@ func NewSubscriberConfig(options []SubscriberOption) SubscriberConfig {
 	return cfg
 }
 
+// Handles subscriber options like:
+// - Message filtering (by event type)
+// - Consumer group names
+// - Acknowledgment types (auto/manual)
+// - Ack wait times and redelivery limits
 type SubscriberOption interface {
 	configureSubscriberConfig(*SubscriberConfig)
 }

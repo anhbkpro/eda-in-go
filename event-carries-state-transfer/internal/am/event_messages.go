@@ -13,6 +13,7 @@ import (
 )
 
 type (
+	// Combines the Message interface with DDD Event interface
 	EventMessage interface {
 		Message
 		ddd.Event
@@ -20,7 +21,9 @@ type (
 
 	EventPublisher  = MessagePublisher[ddd.Event]
 	EventSubscriber = MessageSubscriber[EventMessage]
-	EventStream     = MessageStream[ddd.Event, EventMessage]
+	// Specialized stream for domain events that handles serialization using protobuf
+	// Integrates with the registry system for event payload serialization/deserialization
+	EventStream = MessageStream[ddd.Event, EventMessage]
 
 	eventStream struct {
 		reg    registry.Registry
