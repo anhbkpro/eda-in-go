@@ -41,7 +41,7 @@ func (m Module) Startup(ctx context.Context, mono monolith.Monolith) (err error)
 	if err != nil {
 		return err
 	}
-	customers := postgres.NewCustomerCacheRepository("search.customers_cache", mono.DB(), grpc.NewCustomerRepository(conn))
+	customers := postgres.NewCustomerCacheRepository("search.customers_cache", mono.DB(), grpc.NewCustomerRepository(conn)) // fallback to grpc call if customer is not found in cache table
 	stores := postgres.NewStoreCacheRepository("search.stores_cache", mono.DB(), grpc.NewStoreRepository(conn))
 	products := postgres.NewProductCacheRepository("search.products_cache", mono.DB(), grpc.NewProductRepository(conn))
 	orders := postgres.NewOrderRepository("search.orders", mono.DB())
