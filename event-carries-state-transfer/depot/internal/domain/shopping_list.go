@@ -1,9 +1,9 @@
 package domain
 
 import (
-	"eda-in-golang/internal/ddd"
-
 	"github.com/stackus/errors"
+
+	"eda-in-golang/internal/ddd"
 )
 
 const ShoppingListAggregate = "depot.ShoppingList"
