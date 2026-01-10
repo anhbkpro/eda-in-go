@@ -8,6 +8,7 @@ This documentation provides comprehensive guides and references for understandin
 |----------|-------------|
 | **[Application Messaging (AM) Module](application-messaging.md)** | Core messaging abstraction layer for event-driven communication |
 | **[Driver & Driven Architecture](driver-driven.md)** | Clean Architecture principles and dependency flow |
+| **[Integration Event Flow](integration-event-flow.md)** | Domain to integration event transformation pattern |
 | **[Product Price Flow](product-price-flow.md)** | Business process documentation for pricing workflows |
 | **[Basket Store Event Handlers](basket-store-event-handlers.md)** | Event handling patterns for basket and store services |
 
@@ -48,8 +49,9 @@ Located in `docs/architecture/c4/` - PlantUML diagrams showing system architectu
 
 1. **Architecture Overview**: Start with [Driver & Driven Architecture](driver-driven.md)
 2. **Messaging**: Learn about [Application Messaging](application-messaging.md)
-3. **System Design**: Review C4 diagrams in `architecture/c4/`
-4. **Business Processes**: Check specific flows like [Product Price Flow](product-price-flow.md)
+3. **Event Patterns**: Understand [Integration Event Flow](integration-event-flow.md)
+4. **System Design**: Review C4 diagrams in `architecture/c4/`
+5. **Business Processes**: Check specific flows like [Product Price Flow](product-price-flow.md)
 
 ## 📋 Development Guidelines
 
