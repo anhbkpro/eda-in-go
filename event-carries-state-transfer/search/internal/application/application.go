@@ -29,11 +29,9 @@ func New(orders domain.OrderRepository) *app {
 }
 
 func (a app) SearchOrders(ctx context.Context, search domain.SearchFilters) ([]*domain.Order, error) {
-	// TODO implement me
-	panic("implement me")
+	return a.orders.Search(ctx, &search)
 }
 
 func (a app) GetOrder(ctx context.Context, get GetOrder) (*domain.Order, error) {
-	// TODO implement me
-	panic("implement me")
+	return a.orders.Get(ctx, get.OrderID)
 }
