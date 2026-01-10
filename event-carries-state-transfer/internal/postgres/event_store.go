@@ -3,12 +3,13 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"eda-in-golang/internal/es"
-	"eda-in-golang/internal/registry"
 	"fmt"
 	"time"
 
 	"github.com/stackus/errors"
+
+	"eda-in-golang/internal/es"
+	"eda-in-golang/internal/registry"
 )
 
 type EventStore struct {
