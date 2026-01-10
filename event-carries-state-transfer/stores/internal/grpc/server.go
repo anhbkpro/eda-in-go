@@ -30,7 +30,7 @@ func (s server) CreateStore(ctx context.Context, request *storespb.CreateStoreRe
 	storeID := uuid.NewString()
 
 	err := s.app.CreateStore(ctx, commands.CreateStore{
-		ID:       uuid.NewString(),
+		ID:       storeID,
 		Name:     request.GetName(),
 		Location: request.GetLocation(),
 	})

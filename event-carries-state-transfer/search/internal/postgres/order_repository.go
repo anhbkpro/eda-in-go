@@ -200,7 +200,7 @@ func (r OrderRepository) Get(ctx context.Context, orderID string) (*domain.Order
 	}
 
 	var itemData []byte
-	err := r.db.QueryRowContext(ctx, r.table(query)).Scan(&order.CustomerID, &order.CustomerName, &itemData, &order.Status, &order.CreatedAt)
+	err := r.db.QueryRowContext(ctx, r.table(query), orderID).Scan(&order.CustomerID, &order.CustomerName, &itemData, &order.Status, &order.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
