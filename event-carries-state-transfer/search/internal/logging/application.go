@@ -1,21 +1,36 @@
 package logging
 
 import (
-	"eda-in-golang/search/internal/application"
+	"context"
 
 	"github.com/rs/zerolog"
+
+	"eda-in-golang/search/internal/application"
+	"eda-in-golang/search/internal/domain"
 )
 
 type Application struct {
-	application.App
+	application.Application
 	logger zerolog.Logger
 }
 
-var _ application.App = (*Application)(nil)
+var _ application.Application = (*Application)(nil)
 
-func LogApplicationAccess(application application.App, logger zerolog.Logger) Application {
+func LogApplicationAccess(application application.Application, logger zerolog.Logger) Application {
 	return Application{
-		App:    application,
-		logger: logger,
+		Application: application,
+		logger:      logger,
 	}
+}
+
+func (a Application) SearchOrders(ctx context.Context, search domain.SearchFilters) (orders []*domain.Order, err error) {
+	a.logger.Info().Msg("--> Search.SearchOrders")
+	defer func() { a.logger.Info().Err(err).Msg("<-- Search.SearchOrders") }()
+	return a.Application.SearchOrders(ctx, search)
+}
+
+func (a Application) GetOrder(ctx context.Context, get application.GetOrder) (order *domain.Order, err error) {
+	a.logger.Info().Msg("--> Search.GetOrder")
+	defer func() { a.logger.Info().Err(err).Msg("<-- Search.GetOrder") }()
+	return a.Application.GetOrder(ctx, get)
 }
