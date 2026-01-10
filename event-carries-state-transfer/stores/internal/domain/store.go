@@ -1,10 +1,10 @@
 package domain
 
 import (
+	"github.com/stackus/errors"
+
 	"eda-in-golang/internal/ddd"
 	"eda-in-golang/internal/es"
-
-	"github.com/stackus/errors"
 )
 
 var StoreAggregate = "stores.Store"

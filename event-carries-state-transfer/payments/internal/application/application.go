@@ -2,10 +2,11 @@ package application
 
 import (
 	"context"
-	"eda-in-golang/internal/ddd"
-	"eda-in-golang/payments/internal/domain"
 
 	"github.com/stackus/errors"
+
+	"eda-in-golang/internal/ddd"
+	"eda-in-golang/payments/internal/domain"
 )
 
 type (

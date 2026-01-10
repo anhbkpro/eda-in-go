@@ -1,9 +1,9 @@
 package domain
 
 import (
-	"eda-in-golang/internal/es"
-
 	"github.com/stackus/errors"
+
+	"eda-in-golang/internal/es"
 )
 
 const CustomerAggregate = "customers.CustomerAggregate"

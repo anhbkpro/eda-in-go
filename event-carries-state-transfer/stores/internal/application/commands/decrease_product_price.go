@@ -2,10 +2,11 @@ package commands
 
 import (
 	"context"
-	"eda-in-golang/stores/internal/domain"
 	"fmt"
 
 	"github.com/stackus/errors"
+
+	"eda-in-golang/stores/internal/domain"
 )
 
 // Create Command and Handler for decrease product price
