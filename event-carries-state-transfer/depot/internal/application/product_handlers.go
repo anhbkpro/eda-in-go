@@ -34,7 +34,7 @@ func (h ProductHandlers[T]) HandleEvent(ctx context.Context, event T) error {
 
 func (h ProductHandlers[T]) onProductAdded(ctx context.Context, event T) error {
 	payload := event.Payload().(*storespb.ProductAdded)
-	return h.cache.Add(ctx, payload.GetId(), payload.GetStoreId(), payload.GetName())
+	return h.cache.Add(ctx, payload.GetId(), payload.GetStoreId(), payload.GetName(), payload.GetPrice())
 }
 
 func (h ProductHandlers[T]) onProductRebranded(ctx context.Context, event T) error {

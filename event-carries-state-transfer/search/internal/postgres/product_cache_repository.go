@@ -32,9 +32,9 @@ func (r ProductCacheRepository) table(query string) string {
 }
 
 func (r ProductCacheRepository) Add(ctx context.Context, productID, storeID, name string) error {
-	const query = `INSERT INTO %s (id, store_id, name) VALUES ($1, $2, $3)`
+	const query = `INSERT INTO %s (id, store_id, name, price) VALUES ($1, $2, $3, $4)`
 
-	_, err := r.db.ExecContext(ctx, r.table(query), productID, storeID, name)
+	_, err := r.db.ExecContext(ctx, r.table(query), productID, storeID, name, 0.00)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
@@ -64,13 +64,14 @@ func (r ProductCacheRepository) Remove(ctx context.Context, productID string) er
 }
 
 func (r ProductCacheRepository) Find(ctx context.Context, productID string) (*domain.Product, error) {
-	const query = `SELECT store_id, name FROM %s WHERE id = $1 LIMIT 1`
+	const query = `SELECT store_id, name, price FROM %s WHERE id = $1 LIMIT 1`
 
 	product := &domain.Product{
 		ID: productID,
 	}
 
-	err := r.db.QueryRowContext(ctx, r.table(query), productID).Scan(&product.StoreID, &product.Name)
+	var price float64
+	err := r.db.QueryRowContext(ctx, r.table(query), productID).Scan(&product.StoreID, &product.Name, &price)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.Wrap(err, "scanning product")

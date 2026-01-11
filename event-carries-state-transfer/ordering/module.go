@@ -43,7 +43,11 @@ func (Module) Startup(ctx context.Context, mono monolith.Monolith) (err error) {
 		es.NewEventPublisher(domainDispatcher), // Event store middleware captures and dispatches domain events
 		pg.NewSnapshotStore("ordering.snapshots", mono.DB(), reg),
 	)
-	orders := es.NewAggregateRepository[*domain.Order](domain.OrderAggregate, reg, aggregateStore)
+	orders := es.NewAggregateRepository[*domain.Order](
+		domain.OrderAggregate,
+		reg,
+		aggregateStore,
+	)
 	conn, err := grpc.Dial(ctx, mono.Config().Rpc.Address())
 	if err != nil {
 		return err

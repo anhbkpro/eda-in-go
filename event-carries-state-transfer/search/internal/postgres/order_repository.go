@@ -33,7 +33,7 @@ func (r OrderRepository) Add(ctx context.Context, order *domain.Order) error {
 		items, status, product_ids, store_ids,
 		created_at) VALUES (
 		$1, $2, $3,
-		$4, $5, $6, $7
+		$4, $5, $6, $7,
 		$8
 		)`
 
@@ -44,8 +44,8 @@ func (r OrderRepository) Add(ctx context.Context, order *domain.Order) error {
 
 	productIDs := make(IDArray, 0, len(order.Items))
 	storeMap := make(map[string]struct{})
-	for i, item := range order.Items {
-		productIDs[i] = item.ProductID
+	for _, item := range order.Items {
+		productIDs = append(productIDs, item.ProductID)
 		storeMap[item.StoreID] = struct{}{}
 	}
 	storeIDs := make(IDArray, 0, len(storeMap))
