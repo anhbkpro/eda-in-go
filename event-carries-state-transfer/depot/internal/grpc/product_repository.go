@@ -32,5 +32,6 @@ func (r ProductRepository) productToDomain(product *storespb.Product) *domain.Pr
 		ID:      product.GetId(),
 		StoreID: product.GetStoreId(),
 		Name:    product.GetName(),
+		Price:   product.GetPrice(),
 	}
 }
