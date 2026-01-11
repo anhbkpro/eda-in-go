@@ -35,6 +35,8 @@ func (h IntegrationEventHandlers[T]) HandleEvent(ctx context.Context, event T) e
 	return nil
 }
 
+// [integration-event-flow.md] 3. Integration handler transforms and publishes the event to the appropriate channel
+// Convert domain.OrderCreated → orderingpb.OrderCreated
 func (h IntegrationEventHandlers[T]) onOrderCreated(ctx context.Context, event ddd.AggregateEvent) error {
 	payload := event.Payload().(*domain.OrderCreated)
 	items := make([]*orderingpb.OrderCreated_Item, len(payload.Items))

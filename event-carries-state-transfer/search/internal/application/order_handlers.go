@@ -40,6 +40,8 @@ func (h OrderHandlers[T]) HandleEvent(ctx context.Context, event T) error {
 	return nil
 }
 
+// [integration-event-flow.md] 5. Integration handler transforms and publishes (different service)
+// Convert orderingpb.OrderCreated → domain.Order
 func (h OrderHandlers[T]) onOrderCreated(ctx context.Context, event T) error {
 	payload := event.Payload().(*orderingpb.OrderCreated)
 
