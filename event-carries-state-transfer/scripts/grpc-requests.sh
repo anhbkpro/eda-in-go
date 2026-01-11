@@ -4,7 +4,7 @@
 #
 # Make executable: chmod +x scripts/grpc-requests.sh
 
-GRPC_HOST="${GRPC_HOST:-localhost:18086}"
+GRPC_HOST="${GRPC_HOST:-localhost:8086}"
 
 # ============================================================================
 # STORE COMMANDS
