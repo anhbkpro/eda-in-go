@@ -40,7 +40,7 @@ func (Module) Startup(ctx context.Context, mono monolith.Monolith) (err error) {
 	eventStream := am.NewEventStream(reg, jetstream.NewStream(mono.Config().Nats.Stream, mono.JS()))
 	aggregateStore := es.AggregateStoreWithMiddleware(
 		pg.NewEventStore("ordering.events", mono.DB(), reg),
-		es.NewEventPublisher(domainDispatcher),
+		es.NewEventPublisher(domainDispatcher), // Event store middleware captures and dispatches domain events
 		pg.NewSnapshotStore("ordering.snapshots", mono.DB(), reg),
 	)
 	orders := es.NewAggregateRepository[*domain.Order](domain.OrderAggregate, reg, aggregateStore)
@@ -66,6 +66,7 @@ func (Module) Startup(ctx context.Context, mono monolith.Monolith) (err error) {
 		return err
 	}
 
+	// [integration-event-flow.md] 2. Event dispatcher routes to integration handlers
 	handlers.RegisterIntegrationEventHandlers(integrationEventHandlers, domainDispatcher)
 
 	return nil

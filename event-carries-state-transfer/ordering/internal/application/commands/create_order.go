@@ -55,6 +55,7 @@ func (h CreateOrderHandler) CreateOrder(ctx context.Context, cmd CreateOrder) er
 		return errors.Wrap(err, "order shopping scheduling")
 	}
 
+	// [integration-event-flow.md] 1. Domain event generated in aggregate
 	err = order.CreateOrder(cmd.ID, cmd.CustomerID, cmd.PaymentID, shoppingID, cmd.Items)
 	if err != nil {
 		return errors.Wrap(err, "create order command")

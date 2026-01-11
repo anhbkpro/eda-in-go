@@ -12,6 +12,7 @@ func RegisterOrderHandlers(orderHandlers ddd.EventHandler[ddd.Event], stream am.
 		return orderHandlers.HandleEvent(ctx, msg)
 	})
 
+	// [integration-event-flow.md] 4. Other services consume integration events
 	return stream.Subscribe(orderingpb.OrderAggregateChannel, evtMsgHandler, am.MessageFilter{
 		orderingpb.OrderCreatedEvent,
 		orderingpb.OrderCanceledEvent,
