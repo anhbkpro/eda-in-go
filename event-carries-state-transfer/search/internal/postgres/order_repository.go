@@ -3,14 +3,16 @@ package postgres
 import (
 	"bytes"
 	"context"
-	"database/sql"
-	"database/sql/driver"
-	"eda-in-golang/search/internal/domain"
 	"encoding/json"
 	"fmt"
 	"strings"
 
+	"database/sql"
+	"database/sql/driver"
+
 	"github.com/stackus/errors"
+
+	"eda-in-golang/search/internal/domain"
 )
 
 type OrderRepository struct {

@@ -2,10 +2,11 @@ package commands
 
 import (
 	"context"
-	"eda-in-golang/depot/internal/domain"
-	"eda-in-golang/internal/ddd"
 
 	"github.com/pkg/errors"
+
+	"eda-in-golang/depot/internal/domain"
+	"eda-in-golang/internal/ddd"
 )
 
 type CreateShoppingList struct {

@@ -1,8 +1,9 @@
 package es
 
 import (
-	"eda-in-golang/internal/ddd"
 	"fmt"
+
+	"eda-in-golang/internal/ddd"
 )
 
 type EventApplier interface {

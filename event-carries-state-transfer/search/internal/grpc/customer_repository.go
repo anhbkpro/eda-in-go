@@ -2,10 +2,11 @@ package grpc
 
 import (
 	"context"
-	"eda-in-golang/customers/customerspb"
-	"eda-in-golang/search/internal/domain"
 
 	"google.golang.org/grpc"
+
+	"eda-in-golang/customers/customerspb"
+	"eda-in-golang/search/internal/domain"
 )
 
 type CustomerRepository struct {

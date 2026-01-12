@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+
 	"eda-in-golang/notifications/internal/domain"
 )
 

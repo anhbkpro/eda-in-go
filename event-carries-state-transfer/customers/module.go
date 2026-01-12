@@ -2,6 +2,7 @@ package customers
 
 import (
 	"context"
+
 	"eda-in-golang/customers/customerspb"
 	"eda-in-golang/customers/internal/application"
 	"eda-in-golang/customers/internal/grpc"

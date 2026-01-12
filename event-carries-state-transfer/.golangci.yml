@@ -1,0 +1,43 @@
+run:
+  timeout: 5m
+
+linters-settings:
+  goimports:
+    local-prefixes: eda-in-golang
+  gofumpt:
+    extra-rules: true
+  import:
+    # Group imports by their location
+    # - standard library imports
+    # - external imports (github.com, golang.org, etc.)
+    # - internal imports (eda-in-golang)
+    groups:
+      - standard
+      - external
+      - internal
+
+linters:
+  enable:
+    - gofmt
+    - goimports
+    - gofumpt
+    - ineffassign
+    - misspell
+    - staticcheck
+    - unused
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+    # Skip generated files
+    - path: \.pb\.go$
+      linters:
+        - goimports
+    - path: _grpc\.pb\.go$
+      linters:
+        - goimports
+    - path: _pb\.go$
+      linters:
+        - goimports

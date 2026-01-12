@@ -2,6 +2,7 @@ package queries
 
 import (
 	"context"
+
 	"eda-in-golang/depot/internal/domain"
 )
 
