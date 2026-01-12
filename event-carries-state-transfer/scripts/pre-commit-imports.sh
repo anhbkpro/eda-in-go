@@ -1,5 +1,15 @@
 #!/bin/bash
 # pre-commit-imports.sh - Pre-commit hook to check import organization
+#
+# This hook runs before each commit to ensure staged Go files have
+# properly organized imports. It uses goimports to check for any
+# formatting issues that would change the file.
+#
+# For faster checking, consider using the Go implementation instead:
+# make check-imports-go
+#
+# To set up: cp scripts/pre-commit-imports.sh .git/hooks/pre-commit
+#            chmod +x .git/hooks/pre-commit
 
 echo "🔍 Checking import organization..."
 

@@ -1,4 +1,16 @@
-PHONY := install-tools generate setup-hooks check-imports check-imports-go start-infra start-nats start-postgres stop-infra
+# Available targets:
+# install-tools    - Install required development tools (buf, protoc, etc.)
+# generate         - Generate protobuf code and other assets
+# setup-hooks      - Setup git hooks for commit message validation
+# check-imports    - Check Go import organization (bash script - slower)
+# check-imports-go - Check Go import organization (Go script - faster, preferred)
+# fix-imports      - Auto-fix import organization issues
+# start-infra      - Start NATS and PostgreSQL containers
+# start-nats       - Start only NATS container
+# start-postgres   - Start only PostgreSQL container
+# stop-infra       - Stop NATS and PostgreSQL containers
+
+PHONY := install-tools generate setup-hooks check-imports check-imports-go fix-imports start-infra start-nats start-postgres stop-infra
 all: install-tools generate setup-hooks
 
 install-tools:

@@ -7,10 +7,11 @@ linters-settings:
   gofumpt:
     extra-rules: true
   import:
-    # Group imports by their location
+    # Import organization rules (see CONTRIBUTING.md for details)
     # - standard library imports
     # - external imports (github.com, golang.org, etc.)
     # - internal imports (eda-in-golang)
+    # Note: This linter is disabled for generated files
     groups:
       - standard
       - external

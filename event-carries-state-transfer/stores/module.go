@@ -3,12 +3,13 @@ package stores
 import (
 	"context"
 
+	pg "eda-in-golang/internal/postgres"
+
 	"eda-in-golang/internal/am"
 	"eda-in-golang/internal/ddd"
 	"eda-in-golang/internal/es"
 	"eda-in-golang/internal/jetstream"
 	"eda-in-golang/internal/monolith"
-	pg "eda-in-golang/internal/postgres"
 	"eda-in-golang/internal/registry"
 	"eda-in-golang/internal/registry/serdes"
 	"eda-in-golang/stores/internal/application"
