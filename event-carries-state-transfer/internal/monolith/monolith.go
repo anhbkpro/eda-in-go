@@ -3,13 +3,14 @@ package monolith
 import (
 	"context"
 	"database/sql"
-	"eda-in-golang/internal/config"
-	"eda-in-golang/internal/waiter"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/nats-io/nats.go"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
+
+	"eda-in-golang/internal/config"
+	"eda-in-golang/internal/waiter"
 )
 
 type Monolith interface {

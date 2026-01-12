@@ -2,10 +2,11 @@ package grpc
 
 import (
 	"context"
-	"eda-in-golang/depot/depotpb"
-	"eda-in-golang/ordering/internal/domain"
 
 	"google.golang.org/grpc"
+
+	"eda-in-golang/depot/depotpb"
+	"eda-in-golang/ordering/internal/domain"
 )
 
 type ShoppingRepository struct {

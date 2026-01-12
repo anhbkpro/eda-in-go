@@ -1,0 +1,8 @@
+# Generated files to ignore
+*.pb.go
+*_grpc.pb.go
+*_pb.go
+
+# Directories with generated code
+**/mocks/
+**/mock_*/

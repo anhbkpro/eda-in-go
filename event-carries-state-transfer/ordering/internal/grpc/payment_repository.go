@@ -2,10 +2,11 @@ package grpc
 
 import (
 	"context"
-	"eda-in-golang/ordering/internal/domain"
-	"eda-in-golang/payments/paymentspb"
 
 	"google.golang.org/grpc"
+
+	"eda-in-golang/ordering/internal/domain"
+	"eda-in-golang/payments/paymentspb"
 )
 
 type PaymentRepository struct {

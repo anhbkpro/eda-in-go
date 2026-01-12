@@ -3,12 +3,13 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"eda-in-golang/search/internal/domain"
 	"fmt"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
 	"github.com/pkg/errors"
+
+	"eda-in-golang/search/internal/domain"
 )
 
 type CustomerCacheRepository struct {

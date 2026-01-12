@@ -1,4 +1,4 @@
-PHONY := install-tools generate setup-hooks start-infra start-nats start-postgres stop-infra
+PHONY := install-tools generate setup-hooks check-imports check-imports-go start-infra start-nats start-postgres stop-infra
 all: install-tools generate setup-hooks
 
 install-tools:
@@ -20,6 +20,22 @@ setup-hooks:
 	@echo "Run 'npm install' to install Node.js dependencies and configure git hooks"
 	@echo "This sets up commitlint for commit message validation"
 	@echo ✅ done
+
+check-imports:
+	@echo checking import organization
+	@chmod +x scripts/check-imports.sh
+	@./scripts/check-imports.sh .
+	@echo ✅ import check completed
+
+check-imports-go:
+	@echo checking import organization with Go tool
+	@go run scripts/check-imports.go .
+	@echo ✅ import check completed
+
+fix-imports:
+	@echo fixing import organization
+	@goimports -w -local eda-in-golang .
+	@echo ✅ imports fixed
 
 start-infra:
 	@echo starting NATS and PostgreSQL

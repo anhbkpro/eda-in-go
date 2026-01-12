@@ -3,10 +3,11 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"eda-in-golang/stores/internal/domain"
 	"fmt"
 
 	"github.com/pkg/errors"
+
+	"eda-in-golang/stores/internal/domain"
 )
 
 type MallRepository struct {

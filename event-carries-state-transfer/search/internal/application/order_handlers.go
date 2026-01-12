@@ -2,10 +2,11 @@ package application
 
 import (
 	"context"
+	"time"
+
 	"eda-in-golang/internal/ddd"
 	"eda-in-golang/ordering/orderingpb"
 	"eda-in-golang/search/internal/domain"
-	"time"
 )
 
 type OrderHandlers[T ddd.Event] struct {
