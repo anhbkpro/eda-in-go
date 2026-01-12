@@ -7,31 +7,26 @@ import (
 	"os"
 
 	"github.com/go-chi/chi/v5"
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/nats-io/nats.go"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	// "eda-in-golang/baskets"
+	_ "github.com/jackc/pgx/v5/stdlib"
+
 	"eda-in-golang/baskets"
 	"eda-in-golang/customers"
 	"eda-in-golang/depot"
 	"eda-in-golang/internal/config"
 	"eda-in-golang/internal/logger"
-	"eda-in-golang/notifications"
-	"eda-in-golang/payments"
-	"eda-in-golang/search"
-
-	// "eda-in-golang/internal/logger"
 	"eda-in-golang/internal/monolith"
 	"eda-in-golang/internal/rpc"
 	"eda-in-golang/internal/waiter"
 	"eda-in-golang/internal/web"
-
-	// "eda-in-golang/notifications"
+	"eda-in-golang/notifications"
 	"eda-in-golang/ordering"
-	// "eda-in-golang/search"
+	"eda-in-golang/payments"
+	"eda-in-golang/search"
 	"eda-in-golang/stores"
 )
 

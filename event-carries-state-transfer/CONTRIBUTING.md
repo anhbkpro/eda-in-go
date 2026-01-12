@@ -97,4 +97,22 @@ git commit --no-verify
 - Follow Go conventions and best practices
 - Use `go fmt` to format code
 - Run `go vet` to check for common issues
+- **Import Organization**: Keep imports organized with proper grouping:
+  ```go
+  import (
+      // std libs
+      "context"
+      "fmt"
+
+      // external libs
+      "github.com/rs/zerolog"
+
+      // alias
+      pg "eda-in-golang/internal/postgres"
+
+      // internal libs
+      "eda-in-golang/internal/ddd"
+  )
+  ```
+- **Import Checking**: Use `make check-imports-go` (preferred, faster) or `make check-imports` to validate import organization
 - Ensure all tests pass before committing

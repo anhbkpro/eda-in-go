@@ -1,3 +1,21 @@
+// check-imports.go - Fast Go implementation of import organization checker
+//
+// This tool enforces the following import organization:
+//   import (
+//       // std libs (context, fmt, etc.)
+//
+//       // external libs (github.com/*, google.golang.org/*)
+//
+//       // alias (aliased imports like pg "path")
+//
+//       // internal libs (eda-in-golang/*)
+//   )
+//
+// Generated files (*.pb.go, *_grpc.pb.go) are automatically skipped.
+// This is the preferred/faster version compared to the bash script.
+//
+// Usage: make check-imports-go or go run scripts/check-imports.go [directory]
+
 package main
 
 import (
@@ -9,11 +27,18 @@ import (
 	"strings"
 )
 
+type ImportInfo struct {
+	Path     string
+	Group    ImportGroup
+	Position int
+}
+
 type ImportGroup int
 
 const (
 	SystemImports ImportGroup = iota
 	ExternalImports
+	AliasImports
 	InternalImports
 )
 
@@ -23,6 +48,8 @@ func (g ImportGroup) String() string {
 		return "system"
 	case ExternalImports:
 		return "external"
+	case AliasImports:
+		return "alias"
 	case InternalImports:
 		return "internal"
 	default:
@@ -30,13 +57,24 @@ func (g ImportGroup) String() string {
 	}
 }
 
-type ImportInfo struct {
-	Path     string
-	Group    ImportGroup
-	Position int
-}
+func classifyImport(line string) ImportGroup {
+	// Remove whitespace and extract path
+	line = strings.TrimSpace(line)
+	var path string
 
-func classifyImport(path string) ImportGroup {
+	// Check if it's an aliased import (contains space before quote)
+	if strings.Contains(line, " \"") {
+		// This is an aliased import
+		return AliasImports
+	} else if strings.Contains(line, "\"") {
+		// Extract path from quoted string
+		start := strings.Index(line, "\"")
+		end := strings.LastIndex(line, "\"")
+		if start >= 0 && end > start {
+			path = line[start+1 : end]
+		}
+	}
+
 	// Internal imports (project modules)
 	if strings.HasPrefix(path, "eda-in-golang/") {
 		return InternalImports
@@ -83,6 +121,7 @@ func isGeneratedFile(filename string) bool {
 func checkFile(filename string) error {
 	if isGeneratedFile(filename) {
 		fmt.Printf("⏭️  Skipping generated file: %s\n", filename)
+		skippedCount++
 		return nil
 	}
 
@@ -98,13 +137,17 @@ func checkFile(filename string) error {
 	}
 
 	if len(file.Imports) == 0 {
+		fmt.Printf("⏭️  No imports to check: %s\n", filename)
+		skippedCount++
 		return nil
 	}
 
+	checkedCount++
 	var imports []ImportInfo
 	for i, imp := range file.Imports {
+		line := strings.TrimSpace(string(src[imp.Pos()-1 : imp.End()-1]))
+		group := classifyImport(line)
 		path := strings.Trim(imp.Path.Value, `"`)
-		group := classifyImport(path)
 		imports = append(imports, ImportInfo{
 			Path:     path,
 			Group:    group,
@@ -120,7 +163,7 @@ func checkFile(filename string) error {
 
 	for _, imp := range imports {
 		// Check if groups are in correct order
-		if imp.Group < lastGroup {
+		if imp.Group < lastGroup && lastGroup != AliasImports {
 			violations = append(violations, fmt.Sprintf(
 				"Import '%s' (%s) appears after %s import",
 				imp.Path, imp.Group, lastGroup))
@@ -141,12 +184,20 @@ func checkFile(filename string) error {
 		for _, violation := range violations {
 			fmt.Printf("  - %s\n", violation)
 		}
+		errorCount++
 		return fmt.Errorf("import violations found")
 	}
 
 	fmt.Printf("✅ %s\n", filename)
 	return nil
 }
+
+// Statistics
+var (
+	checkedCount = 0
+	skippedCount = 0
+	errorCount   = 0
+)
 
 func checkDirectory(dir string) error {
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -184,5 +235,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("Import check completed!")
+	// Display summary
+	fmt.Println("")
+	fmt.Println("📊 Import Check Summary:")
+	fmt.Printf("  ✅ Checked files: %d\n", checkedCount)
+	fmt.Printf("  ⏭️  Skipped files: %d\n", skippedCount)
+	fmt.Printf("  ❌ Files with errors: %d\n", errorCount)
+	fmt.Printf("  📁 Total files processed: %d\n", checkedCount+skippedCount)
+
+	if errorCount > 0 {
+		fmt.Println("")
+		fmt.Println("💡 To fix import issues automatically, run: make fix-imports")
+		os.Exit(1)
+	} else {
+		fmt.Println("")
+		fmt.Println("🎉 All import checks passed!")
+	}
 }

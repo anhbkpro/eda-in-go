@@ -3,6 +3,8 @@ package baskets
 import (
 	"context"
 
+	pg "eda-in-golang/internal/postgres"
+
 	"eda-in-golang/baskets/internal/application"
 	"eda-in-golang/baskets/internal/domain"
 	"eda-in-golang/baskets/internal/grpc"
@@ -14,7 +16,6 @@ import (
 	"eda-in-golang/internal/es"
 	"eda-in-golang/internal/jetstream"
 	"eda-in-golang/internal/monolith"
-	pg "eda-in-golang/internal/postgres"
 	"eda-in-golang/internal/registry"
 	"eda-in-golang/internal/registry/serdes"
 	"eda-in-golang/stores/storespb"

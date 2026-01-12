@@ -1,8 +1,13 @@
-# Generated files to ignore
+# .goimportsignore - Files and directories to ignore during import organization
+#
+# This file tells goimports which files to skip when checking/fixing imports.
+# Generated files should not be modified as they may have different import patterns.
+
+# Generated protobuf files
 *.pb.go
 *_grpc.pb.go
 *_pb.go
 
-# Directories with generated code
+# Directories with generated/mock code
 **/mocks/
 **/mock_*/
