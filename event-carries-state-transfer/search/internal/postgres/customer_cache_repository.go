@@ -12,6 +12,7 @@ import (
 	"eda-in-golang/search/internal/domain"
 )
 
+// CustomerCacheRepository is a cache repository for customers with fallback to GRPC call if not found in cache
 type CustomerCacheRepository struct {
 	tableName string
 	db        *sql.DB

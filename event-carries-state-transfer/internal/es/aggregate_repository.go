@@ -49,26 +49,37 @@ func (r AggregateRepository[T]) Load(ctx context.Context, aggregateID string) (a
 }
 
 func (r AggregateRepository[T]) Save(ctx context.Context, aggregate T) error {
+	fmt.Println("[Step 9] Repo.Save: checking for pending events")
 	if aggregate.Version() == aggregate.PendingVersion() {
-		fmt.Println("[Step 12] Repo.Save: no pending events, skipping save")
+		fmt.Println("[Step 10] Repo.Save: no pending events, skipping save")
 		return nil
 	}
 
-	fmt.Println("[Step 13] Repo → Aggregate.ApplyEvent: applying pending events to update state")
-	for _, event := range aggregate.Events() {
+	fmt.Println("[Step 11] Repo.Save: found pending events, starting save process")
+
+	fmt.Println("[Step 12] Repo → Aggregate: applying pending events to update internal state")
+	events := aggregate.Events()
+	fmt.Printf("[Step 12.1] Repo → Aggregate: processing %d pending events\n", len(events))
+	for i, event := range events {
+		fmt.Printf("[Step 12.2] Repo → Aggregate: applying event %d/%d (%s)\n", i+1, len(events), event.EventName())
 		if err := aggregate.ApplyEvent(event); err != nil {
+			fmt.Printf("[Step 12.3] Repo → Aggregate: ERROR applying event %d: %v\n", i+1, err)
 			return err
 		}
 	}
+	fmt.Println("[Step 12.4] Repo → Aggregate: all events applied successfully")
 
-	fmt.Println("[Step 14] Repo → Store.Save: delegating to aggregate store (with middleware)")
+	fmt.Println("[Step 13] Repo → Store.Save: delegating to aggregate store (with middleware)")
 	err := r.store.Save(ctx, aggregate)
 	if err != nil {
+		fmt.Printf("[Step 13.1] Repo → Store.Save: ERROR from store: %v\n", err)
 		return err
 	}
+	fmt.Println("[Step 13.2] Repo → Store.Save: store save completed successfully")
 
-	fmt.Println("[Step 24] Repo → Aggregate.CommitEvents: clearing pending events")
+	fmt.Println("[Step 14] Repo → Aggregate.CommitEvents: clearing pending events")
 	aggregate.CommitEvents()
+	fmt.Println("[Step 14.1] Repo → Aggregate.CommitEvents: events committed")
 
 	return nil
 }
