@@ -1,0 +1,313 @@
+package main
+
+import (
+	"errors"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
+)
+
+func TestClassifyImport(t *testing.T) {
+	tests := []struct {
+		name     string
+		args     string // import line
+		expected ImportGroup
+	}{
+		{
+			name:     "system import",
+			args:     `"fmt"`,
+			expected: SystemImports,
+		},
+		{
+			name:     "external import",
+			args:     `"github.com/stretchr/testify/assert"`,
+			expected: ExternalImports,
+		},
+		{
+			name:     "internal import",
+			args:     `"eda-in-golang/internal/ddd"`,
+			expected: InternalImports,
+		},
+		{
+			name:     "aliased import",
+			args:     `pg "github.com/lib/pq"`,
+			expected: AliasImports,
+		},
+		{
+			name:     "system import with whitespace",
+			args:     `  "context"`,
+			expected: SystemImports,
+		},
+		{
+			name:     "external import with whitespace",
+			args:     `  "google.golang.org/grpc"`,
+			expected: ExternalImports,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := classifyImport(tt.args)
+			if diff := cmp.Diff(tt.expected, result); diff != "" {
+				t.Errorf("classifyImport(%q) mismatch (-want +got):\n%s", tt.args, diff)
+			}
+		})
+	}
+}
+
+func TestCheckFile(t *testing.T) {
+	tests := []struct {
+		name     string
+		args     string // file content
+		expected error  // expected error (nil means success)
+	}{
+		{
+			name: "domain events without blank line should fail",
+			args: `package handlers
+
+import (
+	"context"
+	"eda-in-golang/depot/internal/domain"
+	"eda-in-golang/internal/ddd"
+)
+
+type domainHandlers[T ddd.AggregateEvent] struct {
+	orders domain.OrderRepository
+}
+`,
+			expected: errors.New("import violations found"),
+		},
+		{
+			name: "invalid order internal before system should fail",
+			args: `package test
+
+import (
+	"eda-in-golang/internal/ddd"
+	"context"
+)
+`,
+			expected: errors.New("import violations found"),
+		},
+		{
+			name: "valid order with all groups should pass",
+			args: `package test
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
+
+	pg "github.com/lib/pq"
+
+	"eda-in-golang/internal/ddd"
+	"eda-in-golang/depot/internal/domain"
+)
+`,
+			expected: nil,
+		},
+		{
+			name: "domain events with blank line should pass",
+			args: `package handlers
+
+import (
+	"context"
+
+	"eda-in-golang/depot/internal/domain"
+	"eda-in-golang/internal/ddd"
+)
+
+type domainHandlers[T ddd.AggregateEvent] struct {
+	orders domain.OrderRepository
+}
+`,
+			expected: nil,
+		},
+		{
+			name: "backwards group order should fail",
+			args: `package test
+
+import (
+	"context"
+	"eda-in-golang/internal/ddd"
+	"fmt"
+)
+`,
+			expected: errors.New("import violations found"),
+		},
+		{
+			name: "missing blank line between groups should fail",
+			args: `package test
+
+import (
+	"context"
+	"github.com/stretchr/testify/assert"
+)
+`,
+			expected: errors.New("import violations found"),
+		},
+		{
+			name: "valid blank line between groups should pass",
+			args: `package test
+
+import (
+	"context"
+
+	"github.com/stretchr/testify/assert"
+)
+`,
+			expected: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Prepare: create temp file
+			tmpDir := t.TempDir()
+			tmpFile := filepath.Join(tmpDir, "test_file.go")
+			if err := os.WriteFile(tmpFile, []byte(tt.args), 0644); err != nil {
+				t.Fatalf("Failed to create temp file: %v", err)
+			}
+
+			// Execute
+			err := checkFile(tmpFile)
+
+			// Verify
+			if tt.expected == nil && err != nil {
+				t.Errorf("checkFile() expected no error, got %v", err)
+			} else if tt.expected != nil && err == nil {
+				t.Errorf("checkFile() expected error %v, got nil", tt.expected)
+			} else if tt.expected != nil && err != nil {
+				// Compare error messages if both are non-nil
+				if diff := cmp.Diff(tt.expected.Error(), err.Error()); diff != "" {
+					t.Errorf("checkFile() error message mismatch (-want +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
+
+func TestIsGeneratedFile(t *testing.T) {
+	tests := []struct {
+		name     string
+		prepare  func(t *testing.T) string // returns temp file path
+		expected bool
+	}{
+		{
+			name: "protobuf file",
+			prepare: func(t *testing.T) string {
+				tmpDir := t.TempDir()
+				tmpFile := filepath.Join(tmpDir, "api.pb.go")
+				if err := os.WriteFile(tmpFile, []byte("package test"), 0644); err != nil {
+					t.Fatalf("Failed to create temp file: %v", err)
+				}
+				return tmpFile
+			},
+			expected: true,
+		},
+		{
+			name: "grpc protobuf file",
+			prepare: func(t *testing.T) string {
+				tmpDir := t.TempDir()
+				tmpFile := filepath.Join(tmpDir, "api_grpc.pb.go")
+				if err := os.WriteFile(tmpFile, []byte("package test"), 0644); err != nil {
+					t.Fatalf("Failed to create temp file: %v", err)
+				}
+				return tmpFile
+			},
+			expected: true,
+		},
+		{
+			name: "generated comment",
+			prepare: func(t *testing.T) string {
+				tmpDir := t.TempDir()
+				tmpFile := filepath.Join(tmpDir, "generated.go")
+				content := "// Code generated by protoc. DO NOT EDIT.\npackage test"
+				if err := os.WriteFile(tmpFile, []byte(content), 0644); err != nil {
+					t.Fatalf("Failed to create temp file: %v", err)
+				}
+				return tmpFile
+			},
+			expected: true,
+		},
+		{
+			name: "regular file",
+			prepare: func(t *testing.T) string {
+				tmpDir := t.TempDir()
+				tmpFile := filepath.Join(tmpDir, "regular.go")
+				if err := os.WriteFile(tmpFile, []byte("package test"), 0644); err != nil {
+					t.Fatalf("Failed to create temp file: %v", err)
+				}
+				return tmpFile
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			filePath := tt.prepare(t)
+			result := isGeneratedFile(filePath)
+			if diff := cmp.Diff(tt.expected, result); diff != "" {
+				t.Errorf("isGeneratedFile(%q) mismatch (-want +got):\n%s", filepath.Base(filePath), diff)
+			}
+		})
+	}
+}
+
+// Test the specific case mentioned in the user query
+func TestDomainEventsImportStructure(t *testing.T) {
+	tests := []struct {
+		name     string
+		args     string // import line
+		expected ImportGroup
+	}{
+		{
+			name:     "context system import",
+			args:     `"context"`,
+			expected: SystemImports,
+		},
+		{
+			name:     "depot internal domain import",
+			args:     `"eda-in-golang/depot/internal/domain"`,
+			expected: InternalImports,
+		},
+		{
+			name:     "ddd internal import",
+			args:     `"eda-in-golang/internal/ddd"`,
+			expected: InternalImports,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := classifyImport(tt.args)
+			if diff := cmp.Diff(tt.expected, result); diff != "" {
+				t.Errorf("classifyImport(%q) mismatch (-want +got):\n%s", tt.args, diff)
+			}
+		})
+	}
+
+	// Verify the sequence is valid (non-decreasing)
+	t.Run("sequence validation", func(t *testing.T) {
+		importLines := []string{`"context"`, `"eda-in-golang/depot/internal/domain"`, `"eda-in-golang/internal/ddd"`}
+		lastGroup := ImportGroup(-1)
+		valid := true
+
+		for _, line := range importLines {
+			group := classifyImport(line)
+			if group < lastGroup && lastGroup != AliasImports {
+				valid = false
+				break
+			}
+			lastGroup = group
+		}
+
+		if !valid {
+			t.Error("Import sequence should be valid (non-decreasing groups)")
+		}
+	})
+}

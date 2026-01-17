@@ -28,9 +28,11 @@ import (
 )
 
 type ImportInfo struct {
-	Path     string
-	Group    ImportGroup
-	Position int
+	Path      string
+	Group     ImportGroup
+	Position  int
+	LineStart int
+	LineEnd   int
 }
 
 type ImportGroup int
@@ -148,17 +150,25 @@ func checkFile(filename string) error {
 		line := strings.TrimSpace(string(src[imp.Pos()-1 : imp.End()-1]))
 		group := classifyImport(line)
 		path := strings.Trim(imp.Path.Value, `"`)
+
+		// Get line numbers for the import
+		startPos := fset.Position(imp.Pos())
+		endPos := fset.Position(imp.End())
+
 		imports = append(imports, ImportInfo{
-			Path:     path,
-			Group:    group,
-			Position: i,
+			Path:      path,
+			Group:     group,
+			Position:  i,
+			LineStart: startPos.Line,
+			LineEnd:   endPos.Line,
 		})
 	}
 
 	var violations []string
 
-	// Check grouping order
+	// Check grouping order and separation
 	var lastGroup ImportGroup = -1
+	var lastLineEnd int = 0
 	var seenGroups = make(map[ImportGroup]bool)
 
 	for _, imp := range imports {
@@ -169,14 +179,20 @@ func checkFile(filename string) error {
 				imp.Path, imp.Group, lastGroup))
 		}
 
-		// Check for proper separation
-		if seenGroups[imp.Group] {
-			// This group has been seen before - check if there's proper separation
-			// This is a simplified check - a full implementation would need to check AST positions
+		// Check for proper separation between different groups
+		if lastGroup != -1 && imp.Group != lastGroup && lastLineEnd > 0 {
+			// Count blank lines between the previous import and this one
+			blankLines := imp.LineStart - lastLineEnd - 1
+			if blankLines < 1 {
+				violations = append(violations, fmt.Sprintf(
+					"Missing blank line between %s and %s import groups",
+					lastGroup, imp.Group))
+			}
 		}
 
 		seenGroups[imp.Group] = true
 		lastGroup = imp.Group
+		lastLineEnd = imp.LineEnd
 	}
 
 	if len(violations) > 0 {
