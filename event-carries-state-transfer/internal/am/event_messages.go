@@ -13,21 +13,23 @@ import (
 )
 
 type (
-	// Combines the Message interface with DDD Event interface
 	EventMessage interface {
 		Message
 		ddd.Event
 	}
 
+	IncomingEventMessage interface {
+		IncomingMessage
+		ddd.Event
+	}
+
 	EventPublisher  = MessagePublisher[ddd.Event]
-	EventSubscriber = MessageSubscriber[EventMessage]
-	// Specialized stream for domain events that handles serialization using protobuf
-	// Integrates with the registry system for event payload serialization/deserialization
-	EventStream = MessageStream[ddd.Event, EventMessage]
+	EventSubscriber = MessageSubscriber[IncomingEventMessage]
+	EventStream     = MessageStream[ddd.Event, IncomingEventMessage]
 
 	eventStream struct {
 		reg    registry.Registry
-		stream MessageStream[RawMessage, RawMessage]
+		stream RawMessageStream
 	}
 
 	eventMessage struct {
@@ -36,7 +38,7 @@ type (
 		payload    ddd.EventPayload
 		metadata   ddd.Metadata
 		occurredAt time.Time
-		msg        RawMessage
+		msg        IncomingMessage
 	}
 )
 
@@ -44,7 +46,7 @@ var _ EventMessage = (*eventMessage)(nil)
 
 var _ EventStream = (*eventStream)(nil)
 
-func NewEventStream(reg registry.Registry, stream MessageStream[RawMessage, RawMessage]) EventStream {
+func NewEventStream(reg registry.Registry, stream RawMessageStream) EventStream {
 	return &eventStream{
 		reg:    reg,
 		stream: stream,
@@ -80,7 +82,7 @@ func (s eventStream) Publish(ctx context.Context, topicName string, event ddd.Ev
 	})
 }
 
-func (s eventStream) Subscribe(topicName string, handler MessageHandler[EventMessage], options ...SubscriberOption) error {
+func (s eventStream) Subscribe(topicName string, handler MessageHandler[IncomingEventMessage], options ...SubscriberOption) error {
 	cfg := NewSubscriberConfig(options)
 
 	var filters map[string]struct{}
@@ -91,7 +93,7 @@ func (s eventStream) Subscribe(topicName string, handler MessageHandler[EventMes
 		}
 	}
 
-	fn := MessageHandlerFunc[RawMessage](func(ctx context.Context, msg RawMessage) error {
+	fn := MessageHandlerFunc[IncomingRawMessage](func(ctx context.Context, msg IncomingRawMessage) error {
 		var eventData EventMessageData
 
 		if filters != nil {

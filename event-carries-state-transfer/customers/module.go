@@ -29,7 +29,9 @@ func (m *Module) Startup(ctx context.Context, mono monolith.Monolith) (err error
 		return err
 	}
 
-	eventStream := am.NewEventStream(reg, jetstream.NewStream(mono.Config().Nats.Stream, mono.JS()))
+	stream := jetstream.NewStream(mono.Config().Nats.Stream, mono.JS(), mono.Logger())
+	eventStream := am.NewEventStream(reg, stream)
+	commandStream := am.NewCommandStream(reg, stream)
 	domainDispatcher := ddd.NewEventDispatcher[ddd.AggregateEvent]()
 	customers := postgres.NewCustomerRepository("customers.customers", mono.DB())
 
@@ -38,16 +40,24 @@ func (m *Module) Startup(ctx context.Context, mono monolith.Monolith) (err error
 		application.New(customers, domainDispatcher),
 		mono.Logger(),
 	)
-	integrationEventHandlers := logging.LogEventHandlerAccess[ddd.AggregateEvent](
-		application.NewIntegrationEventHandlers(eventStream),
-		"IntegrationEvents", mono.Logger(),
+	domainEventHandlers := logging.LogEventHandlerAccess[ddd.AggregateEvent](
+		handlers.NewDomainEventHandlers(eventStream),
+		"DomainEvents", mono.Logger(),
+	)
+	commandHandlers := logging.LogCommandHandlerAccess[ddd.Command](
+		handlers.NewCommandHandlers(app),
+		"Commands", mono.Logger(),
 	)
 
 	if err = grpc.RegisterServer(app, mono.RPC()); err != nil {
 		return err
 	}
 
-	handlers.RegisterIntegrationEventHandlers(integrationEventHandlers, domainDispatcher)
+	handlers.RegisterDomainEventHandlers(domainEventHandlers, domainDispatcher)
+	err = handlers.RegisterCommandHandlers(commandStream, commandHandlers)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

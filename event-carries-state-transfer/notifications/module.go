@@ -14,6 +14,7 @@ import (
 	"eda-in-golang/notifications/internal/handlers"
 	"eda-in-golang/notifications/internal/logging"
 	"eda-in-golang/notifications/internal/postgres"
+	"eda-in-golang/ordering/orderingpb"
 )
 
 type Module struct{}
@@ -22,13 +23,16 @@ func (Module) Name() string {
 	return "notifications"
 }
 
-func (Module) Startup(ctx context.Context, mono monolith.Monolith) (err error) {
+func (m Module) Startup(ctx context.Context, mono monolith.Monolith) (err error) {
 	// setup Driven adapters
 	reg := registry.New()
 	if err = customerspb.Registrations(reg); err != nil {
 		return err
 	}
-	eventStream := am.NewEventStream(reg, jetstream.NewStream(mono.Config().Nats.Stream, mono.JS()))
+	if err = orderingpb.Registrations(reg); err != nil {
+		return err
+	}
+	eventStream := am.NewEventStream(reg, jetstream.NewStream(mono.Config().Nats.Stream, mono.JS(), mono.Logger()))
 	conn, err := grpc.Dial(ctx, mono.Config().Rpc.Address())
 	if err != nil {
 		return err
@@ -40,23 +44,16 @@ func (Module) Startup(ctx context.Context, mono monolith.Monolith) (err error) {
 		application.New(customers),
 		mono.Logger(),
 	)
-	customerHandlers := logging.LogEventHandlerAccess[ddd.Event](
-		application.NewCustomerHandlers(customers),
-		"Customer", mono.Logger(),
-	)
-	orderHandlers := logging.LogEventHandlerAccess[ddd.Event](
-		application.NewOrderHandlers(app),
-		"Order", mono.Logger(),
+	integrationEventHandlers := logging.LogEventHandlerAccess[ddd.Event](
+		handlers.NewIntegrationEventHandlers(app, customers),
+		"IntegrationEvents", mono.Logger(),
 	)
 
 	// setup Driver adapters
-	if err = grpc.RegisterServer(ctx, app, mono.RPC()); err != nil {
+	if err := grpc.RegisterServer(ctx, app, mono.RPC()); err != nil {
 		return err
 	}
-	if err = handlers.RegisterCustomerHandlers(customerHandlers, eventStream); err != nil {
-		return err
-	}
-	if err = handlers.RegisterOrderHandlers(orderHandlers, eventStream); err != nil {
+	if err = handlers.RegisterIntegrationEventHandlers(eventStream, integrationEventHandlers); err != nil {
 		return err
 	}
 

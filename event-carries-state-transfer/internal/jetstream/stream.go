@@ -2,8 +2,10 @@ package jetstream
 
 import (
 	"context"
+	"sync"
 
 	"github.com/nats-io/nats.go"
+	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/proto"
 
 	"eda-in-golang/internal/am"
@@ -14,14 +16,17 @@ const maxRetries = 5
 type Stream struct {
 	streamName string
 	js         nats.JetStreamContext
+	mu         sync.Mutex
+	logger     zerolog.Logger
 }
 
-var _ am.MessageStream[am.RawMessage, am.RawMessage] = (*Stream)(nil)
+var _ am.RawMessageStream = (*Stream)(nil)
 
-func NewStream(streamName string, js nats.JetStreamContext) *Stream {
+func NewStream(streamName string, js nats.JetStreamContext, logger zerolog.Logger) *Stream {
 	return &Stream{
 		streamName: streamName,
 		js:         js,
+		logger:     logger,
 	}
 }
 
@@ -73,7 +78,7 @@ func (s *Stream) Publish(ctx context.Context, topicName string, rawMsg am.RawMes
 	return nil
 }
 
-func (s *Stream) Subscribe(topicName string, handler am.MessageHandler[am.RawMessage], options ...am.SubscriberOption) error {
+func (s *Stream) Subscribe(topicName string, handler am.MessageHandler[am.IncomingRawMessage], options ...am.SubscriberOption) error {
 	var err error
 
 	subCfg := am.NewSubscriberConfig(options)
@@ -118,7 +123,7 @@ func (s *Stream) Subscribe(topicName string, handler am.MessageHandler[am.RawMes
 	return nil
 }
 
-func (s *Stream) handleMsg(cfg am.SubscriberConfig, handler am.MessageHandler[am.RawMessage]) func(*nats.Msg) {
+func (s *Stream) handleMsg(cfg am.SubscriberConfig, handler am.MessageHandler[am.IncomingRawMessage]) func(*nats.Msg) {
 	return func(natsMsg *nats.Msg) {
 		var err error
 

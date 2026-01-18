@@ -16,7 +16,7 @@ type server struct {
 	searchpb.UnimplementedSearchServiceServer // From the doc of type SearchServiceServer interface, embed UnimplementedSearchServiceServer for forward compatibility. It will cause panic if an unimplemented method is ever invoked.
 }
 
-func RegisterServer(app application.Application, registrar grpc.ServiceRegistrar) error {
+func RegisterServer(_ context.Context, app application.Application, registrar grpc.ServiceRegistrar) error {
 	searchpb.RegisterSearchServiceServer(registrar, server{app: app})
 	return nil
 }

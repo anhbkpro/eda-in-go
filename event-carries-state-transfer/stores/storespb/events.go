@@ -22,7 +22,7 @@ const (
 )
 
 func Registrations(reg registry.Registry) error {
-	serde := serdes.NewProtoSerdes(reg)
+	serde := serdes.NewProtoSerde(reg)
 
 	// Store events
 	if err := serde.Register(&StoreCreated{}); err != nil {

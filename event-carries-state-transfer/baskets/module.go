@@ -5,6 +5,7 @@ import (
 
 	pg "eda-in-golang/internal/postgres"
 
+	"eda-in-golang/baskets/basketspb"
 	"eda-in-golang/baskets/internal/application"
 	"eda-in-golang/baskets/internal/domain"
 	"eda-in-golang/baskets/internal/grpc"
@@ -33,14 +34,17 @@ func (m *Module) Startup(ctx context.Context, mono monolith.Monolith) (err error
 	if err = registrations(reg); err != nil {
 		return err
 	}
+	if err = basketspb.Registrations(reg); err != nil {
+		return err
+	}
+
 	if err = storespb.Registrations(reg); err != nil {
 		return err
 	}
-	eventStream := am.NewEventStream(reg, jetstream.NewStream(mono.Config().Nats.Stream, mono.JS()))
-	domainDispatcher := ddd.NewEventDispatcher[ddd.AggregateEvent]()
+	eventStream := am.NewEventStream(reg, jetstream.NewStream(mono.Config().Nats.Stream, mono.JS(), mono.Logger()))
+	domainDispatcher := ddd.NewEventDispatcher[ddd.Event]()
 	aggregateStore := es.AggregateStoreWithMiddleware(
 		pg.NewEventStore("baskets.events", mono.DB(), reg),
-		es.NewEventPublisher(domainDispatcher),
 		pg.NewSnapshotStore("baskets.snapshots", mono.DB(), reg),
 	)
 	baskets := es.NewAggregateRepository[*domain.Basket](domain.BasketAggregate, reg, aggregateStore)
@@ -50,24 +54,19 @@ func (m *Module) Startup(ctx context.Context, mono monolith.Monolith) (err error
 	}
 	stores := postgres.NewStoreCacheRepository("baskets.stores_cache", mono.DB(), grpc.NewStoreRepository(conn))
 	products := postgres.NewProductCacheRepository("baskets.products_cache", mono.DB(), grpc.NewProductRepository(conn))
-	orders := grpc.NewOrderRepository(conn)
 
 	// setup application
 	app := logging.LogApplicationAccess(
-		application.New(baskets, stores, products, orders),
+		application.New(baskets, stores, products, domainDispatcher),
 		mono.Logger(),
 	)
-	orderHandlers := logging.LogEventHandlerAccess[ddd.AggregateEvent](
-		application.NewOrderHandlers(orders),
-		"Order", mono.Logger(),
+	domainEventHandlers := logging.LogEventHandlerAccess[ddd.Event](
+		handlers.NewDomainEventHandlers(eventStream),
+		"DomainEvents", mono.Logger(),
 	)
-	storeHandlers := logging.LogEventHandlerAccess[ddd.Event](
-		application.NewStoreHandlers(stores),
+	integrationEventHandlers := logging.LogEventHandlerAccess[ddd.Event](
+		handlers.NewIntegrationEventHandlers(stores, products),
 		"Store", mono.Logger(),
-	)
-	productHandlers := logging.LogEventHandlerAccess[ddd.Event](
-		application.NewProductHandlers(products),
-		"Product", mono.Logger(),
 	)
 
 	// setup Driver adapters
@@ -75,15 +74,12 @@ func (m *Module) Startup(ctx context.Context, mono monolith.Monolith) (err error
 		return err
 	}
 
-	handlers.RegisterOrderHandlers(orderHandlers, domainDispatcher)
-	if err = handlers.RegisterStoreHandlers(storeHandlers, eventStream); err != nil {
-		return err
-	}
-	if err = handlers.RegisterProductHandlers(productHandlers, eventStream); err != nil {
+	handlers.RegisterDomainEventHandlers(domainDispatcher, domainEventHandlers)
+	if err = handlers.RegisterIntegrationEventHandlers(eventStream, integrationEventHandlers); err != nil {
 		return err
 	}
 
-	return
+	return nil
 }
 
 func registrations(reg registry.Registry) error {

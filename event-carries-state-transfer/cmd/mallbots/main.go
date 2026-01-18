@@ -15,6 +15,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"eda-in-golang/baskets"
+	"eda-in-golang/cosec"
 	"eda-in-golang/customers"
 	"eda-in-golang/depot"
 	"eda-in-golang/internal/config"
@@ -84,6 +85,7 @@ func run() (err error) {
 		&payments.Module{},
 		&stores.Module{},
 		&search.Module{},
+		&cosec.Module{},
 	}
 
 	if err = m.startupModules(); err != nil {

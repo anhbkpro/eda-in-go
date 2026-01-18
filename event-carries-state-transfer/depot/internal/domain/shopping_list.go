@@ -10,6 +10,7 @@ const ShoppingListAggregate = "depot.ShoppingList"
 
 var (
 	ErrShoppingCannotBeCanceled  = errors.Wrap(errors.ErrBadRequest, "the shopping list cannot be canceled")
+	ErrShoppingCannotBeInitiated = errors.Wrap(errors.ErrBadRequest, "the shopping list cannot be initiated")
 	ErrShoppingCannotBeAssigned  = errors.Wrap(errors.ErrBadRequest, "the shopping list cannot be assigned")
 	ErrShoppingCannotBeCompleted = errors.Wrap(errors.ErrBadRequest, "the shopping list cannot be completed")
 )
@@ -55,7 +56,7 @@ func (s *ShoppingList) AddItem(store *Store, product *Product, quantity int) err
 
 func (sl ShoppingList) isCancelable() bool {
 	switch sl.Status {
-	case ShoppingListIsAvailable, ShoppingListIsAssigned, ShoppingListIsActive:
+	case ShoppingListIsPending, ShoppingListIsAvailable, ShoppingListIsAssigned, ShoppingListIsActive:
 		return true
 	default:
 		return false
@@ -70,6 +71,21 @@ func (s *ShoppingList) Cancel() error {
 	s.Status = ShoppingListIsCanceled
 
 	s.AddEvent(ShoppingListCanceledEvent, &ShoppingListCanceled{ShoppingList: s})
+
+	return nil
+}
+
+func (s ShoppingList) isPending() bool {
+	return s.Status == ShoppingListIsPending
+}
+
+func (s *ShoppingList) Initiate() error {
+	if !s.isPending() {
+		return ErrShoppingCannotBeInitiated
+	}
+
+	s.Status = ShoppingListIsActive
+	s.AddEvent(ShoppingListInitiatedEvent, &ShoppingListInitiated{ShoppingList: s})
 
 	return nil
 }

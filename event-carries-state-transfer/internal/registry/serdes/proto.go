@@ -16,7 +16,7 @@ type ProtoSerde struct {
 var _ registry.Serde = (*ProtoSerde)(nil)
 var protoMessageT = reflect.TypeOf((*proto.Message)(nil)).Elem()
 
-func NewProtoSerdes(r registry.Registry) *ProtoSerde {
+func NewProtoSerde(r registry.Registry) *ProtoSerde {
 	return &ProtoSerde{
 		r: r,
 	}

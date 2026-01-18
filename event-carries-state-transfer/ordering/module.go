@@ -38,11 +38,13 @@ func (Module) Startup(ctx context.Context, mono monolith.Monolith) (err error) {
 		return err
 	}
 
-	domainDispatcher := ddd.NewEventDispatcher[ddd.AggregateEvent]()
-	eventStream := am.NewEventStream(reg, jetstream.NewStream(mono.Config().Nats.Stream, mono.JS()))
+	domainDispatcher := ddd.NewEventDispatcher[ddd.Event]()
+	stream := jetstream.NewStream(mono.Config().Nats.Stream, mono.JS(), mono.Logger())
+	eventStream := am.NewEventStream(reg, stream)
+	commandStream := am.NewCommandStream(reg, stream)
 	aggregateStore := es.AggregateStoreWithMiddleware(
 		pg.NewEventStore("ordering.events", mono.DB(), reg),
-		es.NewEventPublisher(domainDispatcher), // Event store middleware captures and dispatches domain events
+		// es.NewEventPublisher(domainDispatcher), // Event store middleware captures and dispatches domain events
 		pg.NewSnapshotStore("ordering.snapshots", mono.DB(), reg),
 	)
 	orders := es.NewAggregateRepository[*domain.Order](
@@ -54,17 +56,24 @@ func (Module) Startup(ctx context.Context, mono monolith.Monolith) (err error) {
 	if err != nil {
 		return err
 	}
-	customers := grpc.NewCustomerRepository(conn)
-	payments := grpc.NewPaymentRepository(conn)
 	shopping := grpc.NewShoppingRepository(conn)
 
 	// setup application
-	var app application.App
-	app = application.New(orders, customers, payments, shopping, eventStream)
-	app = logging.LogApplicationAccess(app, mono.Logger())
+	app := logging.LogApplicationAccess(
+		application.New(orders, shopping, domainDispatcher),
+		mono.Logger(),
+	)
+	domainEventHandlers := logging.LogEventHandlerAccess[ddd.Event](
+		handlers.NewDomainEventHandlers(eventStream),
+		"DomainEvents", mono.Logger(),
+	)
 	integrationEventHandlers := logging.LogEventHandlerAccess(
-		application.NewIntegrationEventHandlers(eventStream),
+		handlers.NewIntegrationEventHandlers(app),
 		"IntegrationEvents", mono.Logger(),
+	)
+	commandHandlers := logging.LogCommandHandlerAccess[ddd.Command](
+		handlers.NewCommandHandlers(app),
+		"Commands", mono.Logger(),
 	)
 
 	// setup Driver adapters
@@ -73,8 +82,13 @@ func (Module) Startup(ctx context.Context, mono monolith.Monolith) (err error) {
 	}
 
 	// [integration-event-flow.md] 2. Event dispatcher routes to integration handlers
-	handlers.RegisterIntegrationEventHandlers(integrationEventHandlers, domainDispatcher)
-
+	handlers.RegisterDomainEventHandlers(domainDispatcher, domainEventHandlers)
+	if err = handlers.RegisterIntegrationEventHandlers(eventStream, integrationEventHandlers); err != nil {
+		return err
+	}
+	if err = handlers.RegisterCommandHandlers(commandStream, commandHandlers); err != nil {
+		return err
+	}
 	return nil
 }
 
