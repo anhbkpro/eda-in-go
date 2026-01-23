@@ -1,0 +1,5 @@
+packages:
+  eda-in-golang:
+    config:
+      all: true
+      filename: '{{.InterfaceName}}_mock.go'

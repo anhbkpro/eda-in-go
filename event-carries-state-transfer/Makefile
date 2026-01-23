@@ -1,16 +1,18 @@
 # Available targets:
-# install-tools    - Install required development tools (buf, protoc, etc.)
+# install-tools    - Install required development tools (buf, protoc, mockery, etc.)
 # generate         - Generate protobuf code and other assets
 # setup-hooks      - Setup git hooks for commit message validation
+# test             - Run all tests with coverage and race detection
 # check-imports    - Check Go import organization (bash script - slower)
 # check-imports-go - Check Go import organization (Go script - faster, preferred)
 # fix-imports      - Auto-fix import organization issues
+# generate-mocks   - Generate mocks for interfaces using mockery
 # start-infra      - Start NATS and PostgreSQL containers
 # start-nats       - Start only NATS container
 # start-postgres   - Start only PostgreSQL container
 # stop-infra       - Stop NATS and PostgreSQL containers
 
-PHONY := install-tools generate setup-hooks check-imports check-imports-go fix-imports start-infra start-nats start-postgres stop-infra
+PHONY := install-tools generate setup-hooks test check-imports check-imports-go fix-imports generate-mocks start-infra start-nats start-postgres stop-infra
 all: install-tools generate setup-hooks
 
 install-tools:
@@ -20,6 +22,7 @@ install-tools:
 	@go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
 	@go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	@go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	@go install github.com/vektra/mockery/v2@latest
 	@echo ✅ done
 
 generate:
@@ -32,6 +35,12 @@ setup-hooks:
 	@echo "Run 'npm install' to install Node.js dependencies and configure git hooks"
 	@echo "This sets up commitlint for commit message validation"
 	@echo ✅ done
+
+test:
+	@echo running tests with coverage and race detection
+	@go test -race -coverprofile=coverage.out $$(go list ./... | grep -v mock) 2>/dev/null || (echo "Some tests failed"; exit 1)
+	@go tool cover -func=coverage.out 2>/dev/null | tail -1 | awk '{print "Total coverage: " $$3}' || echo "Coverage calculation completed"
+	@echo ✅ tests completed
 
 check-imports:
 	@echo checking import organization
@@ -48,6 +57,25 @@ fix-imports:
 	@echo fixing import organization
 	@goimports -w -local eda-in-golang .
 	@echo ✅ imports fixed
+
+generate-mocks:
+	@echo generating mocks
+	@find . -name "*.go" -not -path "./vendor/*" -exec grep -l "type.*interface" {} \; | xargs dirname | sort | uniq | while read -r dir; do \
+		if [ -d "$$dir" ] && [ "$$dir" != "." ]; then \
+			package_path="eda-in-golang$${dir#.}"; \
+			config_file="/tmp/mockery_$$(basename "$$dir").yml"; \
+			echo "packages:" > "$$config_file"; \
+			echo "  $$package_path:" >> "$$config_file"; \
+			echo "    config:" >> "$$config_file"; \
+			echo "      all: true" >> "$$config_file"; \
+			echo "      filename: '{{.InterfaceName}}_mock.go'" >> "$$config_file"; \
+			echo "Generating mocks for $$package_path"; \
+			mockery --config "$$config_file" || true; \
+			rm "$$config_file"; \
+		fi; \
+	done
+	@find . -name "*_mock.go" -not -path "*/mock/*" -exec sh -c 'file="{}"; dir=$$(dirname "$$file"); mkdir -p "$$dir/mock"; mv "$$file" "$$dir/mock/"' \;
+	@echo ✅ mocks generated
 
 start-infra:
 	@echo starting NATS and PostgreSQL

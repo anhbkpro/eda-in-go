@@ -2,20 +2,20 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
+	"eda-in-golang/internal/postgres"
 	"eda-in-golang/payments/internal/domain"
 )
 
 type PaymentRepository struct {
 	tableName string
-	db        *sql.DB
+	db        postgres.DB
 }
 
 var _ domain.PaymentRepository = (*PaymentRepository)(nil)
 
-func NewPaymentRepository(tableName string, db *sql.DB) PaymentRepository {
+func NewPaymentRepository(tableName string, db postgres.DB) PaymentRepository {
 	return PaymentRepository{
 		tableName: tableName,
 		db:        db,

@@ -10,6 +10,7 @@ type (
 	// Base interface for all messages with ID, name, and lifecycle methods (Ack/NAck/Extend/Kill)
 	Message interface {
 		ddd.IDer
+		Subject() string
 		MessageName() string
 	}
 
