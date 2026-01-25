@@ -75,6 +75,7 @@ func (s eventStream) Publish(ctx context.Context, topicName string, event ddd.Ev
 		return err
 	}
 
+	// serialize event then publish to the stream
 	return s.stream.Publish(ctx, topicName, rawMessage{
 		id:      event.ID(),
 		name:    event.EventName(),
