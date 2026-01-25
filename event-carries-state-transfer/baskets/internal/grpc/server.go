@@ -24,7 +24,7 @@ func RegisterServer(app application.App, registrar grpc.ServiceRegistrar) error 
 }
 
 func (s server) StartBasket(ctx context.Context, request *basketspb.StartBasketRequest) (*basketspb.StartBasketResponse, error) {
-	basketID := uuid.New().String()
+	basketID := uuid.NewString()
 	err := s.app.StartBasket(ctx, application.StartBasket{
 		ID:         basketID,
 		CustomerID: request.GetCustomerId(),

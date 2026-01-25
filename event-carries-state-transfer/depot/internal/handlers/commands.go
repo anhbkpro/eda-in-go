@@ -44,7 +44,7 @@ func (h commandHandlers) HandleCommand(ctx context.Context, cmd ddd.Command) (dd
 func (h commandHandlers) doCreateShoppingList(ctx context.Context, cmd ddd.Command) (ddd.Reply, error) {
 	payload := cmd.Payload().(*depotpb.CreateShoppingList)
 
-	id := uuid.New().String()
+	id := uuid.NewString()
 
 	items := make([]commands.OrderItem, 0, len(payload.GetItems()))
 	for _, item := range payload.GetItems() {
