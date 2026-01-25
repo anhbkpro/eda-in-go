@@ -26,157 +26,256 @@ func TestNew(t *testing.T) {
 }
 
 func TestContainer_AddSingleton(t *testing.T) {
-	t.Parallel()
+	type fields struct {
+		container Container
+	}
+	type args struct {
+		key     string
+		factory DepFactoryFunc
+	}
+	type expected struct {
+		validate func(t *testing.T, c Container)
+	}
+	type testCase struct {
+		prepare  func(f *fields)
+		args     args
+		expected expected
+		wantErr  bool
+		errMsg   string
+	}
 
-	tests := []struct {
-		name     string
-		key      string
-		factory  DepFactoryFunc
-		expected func(t *testing.T, c Container)
-	}{
-		{
-			name: "add singleton dependency successfully",
-			key:  "test-service",
-			factory: func(c Container) (any, error) {
-				return &mockDependency{value: "singleton"}, nil
+	tests := map[string]testCase{
+		"add_singleton_dependency_successfully": {
+			prepare: func(f *fields) {
+				f.container = New()
 			},
-			expected: func(t *testing.T, c Container) {
-				val := c.Get("test-service").(*mockDependency)
-				if val.value != "singleton" {
-					t.Errorf("expected singleton value, got %s", val.value)
-				}
+			args: args{
+				key: "test-service",
+				factory: func(c Container) (any, error) {
+					return &mockDependency{value: "singleton"}, nil
+				},
 			},
+			expected: expected{
+				validate: func(t *testing.T, c Container) {
+					val := c.Get("test-service").(*mockDependency)
+					if val.value != "singleton" {
+						t.Errorf("expected singleton value, got %s", val.value)
+					}
+				},
+			},
+			wantErr: false,
 		},
-		{
-			name: "singleton returns same instance",
-			key:  "singleton-test",
-			factory: func(c Container) (any, error) {
-				return &mockDependency{value: "same"}, nil
+		"singleton_returns_same_instance": {
+			prepare: func(f *fields) {
+				f.container = New()
 			},
-			expected: func(t *testing.T, c Container) {
-				val1 := c.Get("singleton-test").(*mockDependency)
-				val2 := c.Get("singleton-test").(*mockDependency)
+			args: args{
+				key: "singleton-test",
+				factory: func(c Container) (any, error) {
+					return &mockDependency{value: "same"}, nil
+				},
+			},
+			expected: expected{
+				validate: func(t *testing.T, c Container) {
+					val1 := c.Get("singleton-test").(*mockDependency)
+					val2 := c.Get("singleton-test").(*mockDependency)
 
-				if val1 != val2 {
-					t.Error("singleton should return same instance")
-				}
-				if val1.value != "same" || val2.value != "same" {
-					t.Error("singleton values should be consistent")
-				}
+					if val1 != val2 {
+						t.Error("singleton should return same instance")
+					}
+					if val1.value != "same" || val2.value != "same" {
+						t.Error("singleton values should be consistent")
+					}
+				},
 			},
+			wantErr: false,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			container := New()
-			container.AddSingleton(tt.key, tt.factory)
-			tt.expected(t, container)
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			f := fields{}
+			if tt.prepare != nil {
+				tt.prepare(&f)
+			}
+
+			// Act
+			f.container.AddSingleton(tt.args.key, tt.args.factory)
+
+			// Assert
+			if tt.expected.validate != nil {
+				tt.expected.validate(t, f.container)
+			}
 		})
 	}
 }
 
 func TestContainer_AddScoped(t *testing.T) {
-	t.Parallel()
+	type fields struct {
+		container Container
+	}
+	type args struct {
+		key     string
+		factory DepFactoryFunc
+	}
+	type expected struct {
+		validate func(t *testing.T, c Container)
+	}
+	type testCase struct {
+		prepare  func(f *fields)
+		args     args
+		expected expected
+		wantErr  bool
+		errMsg   string
+	}
 
-	tests := []struct {
-		name     string
-		key      string
-		factory  DepFactoryFunc
-		expected func(t *testing.T, c Container)
-	}{
-		{
-			name: "add scoped dependency successfully",
-			key:  "scoped-service",
-			factory: func(c Container) (any, error) {
-				return &mockDependency{value: "scoped"}, nil
+	tests := map[string]testCase{
+		"add_scoped_dependency_successfully": {
+			prepare: func(f *fields) {
+				f.container = New()
 			},
-			expected: func(t *testing.T, c Container) {
-				ctx := c.Scoped(context.Background())
-				val := ctx.Value(containerKey).(*container).Get("scoped-service").(*mockDependency)
-				if val.value != "scoped" {
-					t.Errorf("expected scoped value, got %s", val.value)
-				}
+			args: args{
+				key: "scoped-service",
+				factory: func(c Container) (any, error) {
+					return &mockDependency{value: "scoped"}, nil
+				},
 			},
+			expected: expected{
+				validate: func(t *testing.T, c Container) {
+					ctx := c.Scoped(context.Background())
+					val := ctx.Value(containerKey).(*container).Get("scoped-service").(*mockDependency)
+					if val.value != "scoped" {
+						t.Errorf("expected scoped value, got %s", val.value)
+					}
+				},
+			},
+			wantErr: false,
 		},
-		{
-			name: "scoped returns different instances",
-			key:  "scoped-instance-test",
-			factory: func(c Container) (any, error) {
-				return &mockDependency{value: "scoped-instance"}, nil
+		"scoped_returns_different_instances": {
+			prepare: func(f *fields) {
+				f.container = New()
 			},
-			expected: func(t *testing.T, c Container) {
-				ctx1 := c.Scoped(context.Background())
-				ctx2 := c.Scoped(context.Background())
-
-				val1 := ctx1.Value(containerKey).(*container).Get("scoped-instance-test").(*mockDependency)
-				val2 := ctx2.Value(containerKey).(*container).Get("scoped-instance-test").(*mockDependency)
-
-				if val1 == val2 {
-					t.Error("scoped should return different instances")
-				}
+			args: args{
+				key: "scoped-instance-test",
+				factory: func(c Container) (any, error) {
+					return &mockDependency{value: "scoped-instance"}, nil
+				},
 			},
+			expected: expected{
+				validate: func(t *testing.T, c Container) {
+					ctx1 := c.Scoped(context.Background())
+					ctx2 := c.Scoped(context.Background())
+
+					val1 := ctx1.Value(containerKey).(*container).Get("scoped-instance-test").(*mockDependency)
+					val2 := ctx2.Value(containerKey).(*container).Get("scoped-instance-test").(*mockDependency)
+
+					if val1 == val2 {
+						t.Error("scoped should return different instances")
+					}
+				},
+			},
+			wantErr: false,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			container := New()
-			container.AddScoped(tt.key, tt.factory)
-			tt.expected(t, container)
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			f := fields{}
+			if tt.prepare != nil {
+				tt.prepare(&f)
+			}
+
+			// Act
+			f.container.AddScoped(tt.args.key, tt.args.factory)
+
+			// Assert
+			if tt.expected.validate != nil {
+				tt.expected.validate(t, f.container)
+			}
 		})
 	}
 }
 
 func TestContainer_Get(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name        string
-		setup       func(Container)
-		key         string
+	type fields struct {
+		container Container
+	}
+	type args struct {
+		ctx context.Context
+		key string
+	}
+	type expected struct {
+		result      any
+		validate    func(t *testing.T, result any)
 		expectPanic bool
 		panicMsg    string
-		expected    func(t *testing.T, result any)
-	}{
-		{
-			name: "get existing singleton dependency",
-			setup: func(c Container) {
-				c.AddSingleton("existing-singleton", func(c Container) (any, error) {
+	}
+	type testCase struct {
+		prepare  func(f *fields)
+		args     args
+		expected expected
+		wantErr  bool
+		errMsg   string
+	}
+
+	tests := map[string]testCase{
+		"get_existing_singleton_dependency": {
+			prepare: func(f *fields) {
+				f.container = New()
+				f.container.AddSingleton("existing-singleton", func(c Container) (any, error) {
 					return "singleton-value", nil
 				})
 			},
-			key: "existing-singleton",
-			expected: func(t *testing.T, result any) {
-				if result != "singleton-value" {
-					t.Errorf("expected 'singleton-value', got %v", result)
-				}
+			args: args{
+				ctx: context.Background(),
+				key: "existing-singleton",
 			},
+			expected: expected{
+				validate: func(t *testing.T, result any) {
+					if result != "singleton-value" {
+						t.Errorf("expected 'singleton-value', got %v", result)
+					}
+				},
+			},
+			wantErr: false,
 		},
-		{
-			name: "get non-existing dependency panics",
-			key:  "non-existing",
-			expected: func(t *testing.T, result any) {
-				// Should panic before reaching here
-				t.Error("expected panic for non-existing dependency")
+		"get_non_existing_dependency_panics": {
+			prepare: func(f *fields) {
+				f.container = New()
 			},
-			expectPanic: true,
-			panicMsg:    "there is no dependency registered with `non-existing`",
+			args: args{
+				ctx: context.Background(),
+				key: "non-existing",
+			},
+			expected: expected{
+				expectPanic: true,
+				panicMsg:    "there is no dependency registered with `non-existing`",
+			},
+			wantErr: true,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			container := New()
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-			if tt.setup != nil {
-				tt.setup(container)
+			// Arrange
+			f := fields{}
+			if tt.prepare != nil {
+				tt.prepare(&f)
 			}
 
-			if tt.expectPanic {
+			// Act & Assert
+			if tt.expected.expectPanic {
 				defer func() {
 					if r := recover(); r != nil {
-						if panicMsg, ok := r.(string); ok && panicMsg == tt.panicMsg {
+						if panicMsg, ok := r.(string); ok && panicMsg == tt.expected.panicMsg {
 							// Expected panic
 							return
 						}
@@ -187,186 +286,399 @@ func TestContainer_Get(t *testing.T) {
 				}()
 			}
 
-			result := container.Get(tt.key)
+			result := f.container.Get(tt.args.key)
 
-			if !tt.expectPanic && tt.expected != nil {
-				tt.expected(t, result)
+			if !tt.expected.expectPanic && tt.expected.validate != nil {
+				tt.expected.validate(t, result)
 			}
 		})
 	}
 }
 
 func TestContainer_Scoped(t *testing.T) {
-	t.Parallel()
+	type fields struct {
+		container Container
+	}
+	type args struct {
+		ctx context.Context
+	}
+	type expected struct {
+		validate func(t *testing.T, ctx context.Context, original Container)
+	}
+	type testCase struct {
+		prepare  func(f *fields)
+		args     args
+		expected expected
+		wantErr  bool
+		errMsg   string
+	}
 
-	tests := []struct {
-		name     string
-		expected func(t *testing.T, ctx context.Context, original Container)
-	}{
-		{
-			name: "scoped context contains container",
-			expected: func(t *testing.T, ctx context.Context, original Container) {
-				containerVal := ctx.Value(containerKey)
-				if containerVal == nil {
-					t.Fatal("scoped context should contain container")
-				}
-
-				// We can't check the internal structure since container is unexported,
-				// but we can verify the context contains something
-				if containerVal == nil {
-					t.Error("scoped context should contain non-nil value")
-				}
+	tests := map[string]testCase{
+		"scoped_context_contains_container": {
+			prepare: func(f *fields) {
+				f.container = New()
 			},
+			args: args{
+				ctx: context.Background(),
+			},
+			expected: expected{
+				validate: func(t *testing.T, ctx context.Context, original Container) {
+					containerVal := ctx.Value(containerKey)
+					if containerVal == nil {
+						t.Fatal("scoped context should contain container")
+					}
+
+					if containerVal == nil {
+						t.Error("scoped context should contain non-nil value")
+					}
+				},
+			},
+			wantErr: false,
 		},
-		{
-			name: "scoped container inherits dependencies",
-			expected: func(t *testing.T, ctx context.Context, original Container) {
-				original.AddSingleton("inherited", func(c Container) (any, error) {
-					return "inherited-value", nil
-				})
-
-				// Create a new container from the scoped context and add scoped dependency
-				scopedContainer := New()
-				scopedContainer.AddScoped("scoped-inherited", func(c Container) (any, error) {
-					return original.Get("inherited"), nil
-				})
-
-				scopedCtx := scopedContainer.Scoped(ctx)
-				// This is a simplified test - in real usage, the scoped container
-				// would inherit from the parent through the Scoped() method
-				_ = scopedCtx
+		"scoped_container_inherits_dependencies": {
+			prepare: func(f *fields) {
+				f.container = New()
 			},
+			args: args{
+				ctx: context.Background(),
+			},
+			expected: expected{
+				validate: func(t *testing.T, ctx context.Context, original Container) {
+					original.AddSingleton("inherited", func(c Container) (any, error) {
+						return "inherited-value", nil
+					})
+
+					scopedContainer := New()
+					scopedContainer.AddScoped("scoped-inherited", func(c Container) (any, error) {
+						return original.Get("inherited"), nil
+					})
+
+					scopedCtx := scopedContainer.Scoped(ctx)
+					_ = scopedCtx
+				},
+			},
+			wantErr: false,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			container := New()
-			ctx := container.Scoped(context.Background())
-			tt.expected(t, ctx, container)
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			f := fields{}
+			if tt.prepare != nil {
+				tt.prepare(&f)
+			}
+
+			// Act
+			ctx := f.container.Scoped(tt.args.ctx)
+
+			// Assert
+			if tt.expected.validate != nil {
+				tt.expected.validate(t, ctx, f.container)
+			}
 		})
 	}
 }
 
 func TestContainer_CyclicDependency(t *testing.T) {
-	t.Parallel()
+	type fields struct {
+		container Container
+	}
+	type args struct {
+		ctx context.Context
+		key string
+	}
+	type expected struct {
+		expectPanic bool
+		panicMsg    string
+	}
+	type testCase struct {
+		prepare  func(f *fields)
+		args     args
+		expected expected
+		wantErr  bool
+		errMsg   string
+	}
 
-	container := New()
+	tests := map[string]testCase{
+		"cyclic_dependency_detection": {
+			prepare: func(f *fields) {
+				f.container = New()
 
-	// Add dependency A that depends on B
-	container.AddSingleton("dep-a", func(c Container) (any, error) {
-		c.Get("dep-b") // This will try to get B
-		return "a", nil
-	})
+				// Add dependency A that depends on B
+				f.container.AddSingleton("dep-a", func(c Container) (any, error) {
+					c.Get("dep-b") // This will try to get B
+					return "a", nil
+				})
 
-	// Add dependency B that depends on A (creating cycle)
-	container.AddSingleton("dep-b", func(c Container) (any, error) {
-		c.Get("dep-a") // This creates the cycle
-		return "b", nil
-	})
+				// Add dependency B that depends on A (creating cycle)
+				f.container.AddSingleton("dep-b", func(c Container) (any, error) {
+					c.Get("dep-a") // This creates the cycle
+					return "b", nil
+				})
+			},
+			args: args{
+				ctx: context.Background(),
+				key: "dep-a",
+			},
+			expected: expected{
+				expectPanic: true,
+				panicMsg:    "cyclic dependencies",
+			},
+			wantErr: true,
+		},
+	}
 
-	defer func() {
-		if r := recover(); r != nil {
-			if panicMsg, ok := r.(string); ok && len(panicMsg) > 0 {
-				// Expected panic for cyclic dependency
-				if !contains(panicMsg, "cyclic dependencies") {
-					t.Errorf("expected cyclic dependency panic, got: %s", panicMsg)
-				}
-				return
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			f := fields{}
+			if tt.prepare != nil {
+				tt.prepare(&f)
 			}
-			t.Errorf("unexpected panic type: %v", r)
-		} else {
-			t.Error("expected panic for cyclic dependency")
-		}
-	}()
 
-	container.Get("dep-a")
+			// Act & Assert
+			defer func() {
+				if r := recover(); r != nil {
+					if panicMsg, ok := r.(string); ok && len(panicMsg) > 0 {
+						// Expected panic for cyclic dependency
+						if !contains(panicMsg, tt.expected.panicMsg) {
+							t.Errorf("expected cyclic dependency panic, got: %s", panicMsg)
+						}
+						return
+					}
+					t.Errorf("unexpected panic type: %v", r)
+				} else {
+					t.Error("expected panic for cyclic dependency")
+				}
+			}()
+
+			f.container.Get(tt.args.key)
+		})
+	}
 }
 
 func TestContainer_ThreadSafety(t *testing.T) {
-	t.Parallel()
-
-	container := New()
-	container.AddSingleton("counter", func(c Container) (any, error) {
-		return &threadSafeCounter{}, nil
-	})
-
-	var wg sync.WaitGroup
-	numGoroutines := 10
-	numOperations := 100
-
-	// Start multiple goroutines accessing the same singleton
-	for i := 0; i < numGoroutines; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for j := 0; j < numOperations; j++ {
-				counter := container.Get("counter").(*threadSafeCounter)
-				counter.increment()
-			}
-		}()
+	type fields struct {
+		container Container
+	}
+	type args struct {
+		ctx           context.Context
+		numGoroutines int
+		numOperations int
+		counterKey    string
+	}
+	type expected struct {
+		finalCount int
+	}
+	type testCase struct {
+		prepare  func(f *fields)
+		args     args
+		expected expected
+		wantErr  bool
+		errMsg   string
 	}
 
-	wg.Wait()
+	tests := map[string]testCase{
+		"concurrent_singleton_access": {
+			prepare: func(f *fields) {
+				f.container = New()
+				f.container.AddSingleton("counter", func(c Container) (any, error) {
+					return &threadSafeCounter{}, nil
+				})
+			},
+			args: args{
+				ctx:           context.Background(),
+				numGoroutines: 10,
+				numOperations: 100,
+				counterKey:    "counter",
+			},
+			expected: expected{
+				finalCount: 1000, // 10 goroutines * 100 operations
+			},
+			wantErr: false,
+		},
+	}
 
-	// Verify the final count
-	finalCounter := container.Get("counter").(*threadSafeCounter)
-	expected := numGoroutines * numOperations
-	if finalCounter.get() != expected {
-		t.Errorf("expected count %d, got %d", expected, finalCounter.get())
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			f := fields{}
+			if tt.prepare != nil {
+				tt.prepare(&f)
+			}
+
+			var wg sync.WaitGroup
+
+			// Act
+			for i := 0; i < tt.args.numGoroutines; i++ {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					for j := 0; j < tt.args.numOperations; j++ {
+						counter := f.container.Get(tt.args.counterKey).(*threadSafeCounter)
+						counter.increment()
+					}
+				}()
+			}
+
+			wg.Wait()
+
+			// Assert
+			finalCounter := f.container.Get(tt.args.counterKey).(*threadSafeCounter)
+			if finalCounter.get() != tt.expected.finalCount {
+				t.Errorf("expected count %d, got %d", tt.expected.finalCount, finalCounter.get())
+			}
+		})
 	}
 }
 
 func TestContainer_ScopedConcurrency(t *testing.T) {
-	t.Parallel()
-
-	container := New()
-	container.AddScoped("scoped-counter", func(c Container) (any, error) {
-		return &threadSafeCounter{}, nil
-	})
-
-	var wg sync.WaitGroup
-	numGoroutines := 5
-
-	// Test that scoped containers work concurrently
-	for i := 0; i < numGoroutines; i++ {
-		wg.Add(1)
-		go func(id int) {
-			defer wg.Done()
-			ctx := container.Scoped(context.Background())
-			// In real usage, you'd extract the scoped container from context
-			// For this test, we just verify the Scoped method doesn't panic
-			_ = ctx
-		}(i)
+	type fields struct {
+		container Container
+	}
+	type args struct {
+		ctx           context.Context
+		numGoroutines int
+	}
+	type expected struct {
+		validate func(t *testing.T)
+	}
+	type testCase struct {
+		prepare  func(f *fields)
+		args     args
+		expected expected
+		wantErr  bool
+		errMsg   string
 	}
 
-	wg.Wait()
+	tests := map[string]testCase{
+		"scoped_containers_work_concurrently": {
+			prepare: func(f *fields) {
+				f.container = New()
+				f.container.AddScoped("scoped-counter", func(c Container) (any, error) {
+					return &threadSafeCounter{}, nil
+				})
+			},
+			args: args{
+				ctx:           context.Background(),
+				numGoroutines: 5,
+			},
+			expected: expected{
+				validate: func(t *testing.T) {
+					// Test completed without panic
+				},
+			},
+			wantErr: false,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			f := fields{}
+			if tt.prepare != nil {
+				tt.prepare(&f)
+			}
+
+			var wg sync.WaitGroup
+
+			// Act
+			for i := 0; i < tt.args.numGoroutines; i++ {
+				wg.Add(1)
+				go func(id int) {
+					defer wg.Done()
+					ctx := f.container.Scoped(tt.args.ctx)
+					_ = ctx
+				}(i)
+			}
+
+			wg.Wait()
+
+			// Assert
+			if tt.expected.validate != nil {
+				tt.expected.validate(t)
+			}
+		})
+	}
 }
 
 func TestContainer_FactoryError(t *testing.T) {
-	t.Parallel()
+	type fields struct {
+		container Container
+	}
+	type args struct {
+		ctx context.Context
+		key string
+	}
+	type expected struct {
+		expectPanic bool
+		panicMsg    string
+	}
+	type testCase struct {
+		prepare  func(f *fields)
+		args     args
+		expected expected
+		wantErr  bool
+		errMsg   string
+	}
 
-	container := New()
-	container.AddSingleton("failing-factory", func(c Container) (any, error) {
-		return nil, context.DeadlineExceeded
-	})
+	tests := map[string]testCase{
+		"factory_error_causes_panic": {
+			prepare: func(f *fields) {
+				f.container = New()
+				f.container.AddSingleton("failing-factory", func(c Container) (any, error) {
+					return nil, context.DeadlineExceeded
+				})
+			},
+			args: args{
+				ctx: context.Background(),
+				key: "failing-factory",
+			},
+			expected: expected{
+				expectPanic: true,
+				panicMsg:    "error building dependency",
+			},
+			wantErr: true,
+		},
+	}
 
-	defer func() {
-		if r := recover(); r != nil {
-			if panicMsg, ok := r.(string); ok && len(panicMsg) > 0 {
-				// Expected panic for factory error
-				if !contains(panicMsg, "error building dependency") {
-					t.Errorf("expected factory error panic, got: %s", panicMsg)
-				}
-				return
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			f := fields{}
+			if tt.prepare != nil {
+				tt.prepare(&f)
 			}
-			t.Errorf("unexpected panic type: %v", r)
-		} else {
-			t.Error("expected panic for factory error")
-		}
-	}()
 
-	container.Get("failing-factory")
+			// Act & Assert
+			defer func() {
+				if r := recover(); r != nil {
+					if panicMsg, ok := r.(string); ok && len(panicMsg) > 0 {
+						if !contains(panicMsg, tt.expected.panicMsg) {
+							t.Errorf("expected factory error panic, got: %s", panicMsg)
+						}
+						return
+					}
+					t.Errorf("unexpected panic type: %v", r)
+				} else {
+					t.Error("expected panic for factory error")
+				}
+			}()
+
+			f.container.Get(tt.args.key)
+		})
+	}
 }
 
 // Helper functions and types

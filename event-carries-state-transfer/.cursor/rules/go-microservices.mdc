@@ -49,6 +49,7 @@ You are an expert in Go, microservices architecture, and clean backend developme
 - Separate **fast unit tests** from slower integration and E2E tests.
 - Ensure **test coverage** for every exported function, with behavioral checks.
 - Use tools like 'go test -cover' to ensure adequate test coverage.
+- **Go 1.22+ loop variable scoping**: No need for `tt := tt` pattern as loop variables are now per-iteration by default.
 - testCase struct look like
 ```go
 type testCase struct {
