@@ -23,9 +23,9 @@ func NewIntegrationEventHandlers(stores domain.StoreCacheRepository, products do
 	}
 }
 
-func RegisterIntegrationEventHandlers(subscriber am.EventSubscriber, handlers ddd.EventHandler[ddd.Event]) (err error) {
+func RegisterIntegrationEventHandlers(subscriber am.EventSubscriber, handler ddd.EventHandler[ddd.Event]) (err error) {
 	evtMsgHandler := am.MessageHandlerFunc[am.IncomingEventMessage](func(ctx context.Context, eventMsg am.IncomingEventMessage) error {
-		return handlers.HandleEvent(ctx, eventMsg)
+		return handler.HandleEvent(ctx, eventMsg)
 	})
 
 	err = subscriber.Subscribe(storespb.StoreAggregateChannel, evtMsgHandler, am.MessageFilter{
