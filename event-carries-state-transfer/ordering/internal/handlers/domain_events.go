@@ -17,8 +17,8 @@ func NewDomainEventHandlers(publisher am.MessagePublisher[ddd.Event]) ddd.EventH
 	return domainHandlers[ddd.Event]{publisher: publisher}
 }
 
-func RegisterDomainEventHandlers(subscriber ddd.EventSubscriber[ddd.Event], handlers ddd.EventHandler[ddd.Event]) {
-	subscriber.Subscribe(handlers,
+func RegisterDomainEventHandlers(subscriber ddd.EventSubscriber[ddd.Event], handler ddd.EventHandler[ddd.Event]) {
+	subscriber.Subscribe(handler,
 		domain.OrderCreatedEvent,
 		domain.OrderRejectedEvent,
 		domain.OrderApprovedEvent,
