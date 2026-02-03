@@ -12,6 +12,8 @@ type (
 	Serializer   func(v interface{}) ([]byte, error)
 	Deserializer func(data []byte, v interface{}) error
 
+	// The registry deals with the serialization and deserialization of the
+	// data when we interact with a database or message broker.
 	Registry interface {
 		Serialize(key string, v interface{}) ([]byte, error)
 		Build(key string, options ...BuildOption) (interface{}, error)
