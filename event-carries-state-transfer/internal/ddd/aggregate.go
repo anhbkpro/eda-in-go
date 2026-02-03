@@ -18,7 +18,7 @@ type (
 	}
 
 	Aggregate struct {
-		Entity
+		Entity // embedded Entity
 		events []AggregateEvent
 	}
 

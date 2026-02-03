@@ -11,8 +11,8 @@ type (
 	}
 
 	Aggregate struct {
-		ddd.Aggregate
-		version int
+		ddd.Aggregate // embedded Aggregate
+		version       int
 	}
 )
 
@@ -29,6 +29,7 @@ func NewAggregate(id, name string) Aggregate {
 	}
 }
 
+// [Decorator Pattern] AddEvent is a wrapper around the AddEvent method on the embedded Aggregate
 func (a *Aggregate) AddEvent(name string, payload ddd.EventPayload, options ...ddd.EventOption) {
 	options = append(options, ddd.Metadata{
 		ddd.AggregateVersionKey: a.PendingVersion() + 1,
