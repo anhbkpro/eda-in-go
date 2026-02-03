@@ -42,6 +42,7 @@ func (h integrationHandlers[T]) HandleEvent(ctx context.Context, event T) error 
 }
 
 func (h integrationHandlers[T]) onOrderCreated(ctx context.Context, event ddd.Event) error {
+	// Perform a type assertion on the value returned from the Payload() method on the event, and not on the event itself.
 	payload := event.Payload().(*orderingpb.OrderCreated)
 
 	var total float64
