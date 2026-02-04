@@ -17,6 +17,10 @@ type EventSourcedAggregate interface {
 
 type AggregateStoreMiddleware func(store AggregateStore) AggregateStore
 
+// AggregateStore vs AggregateRepository
+// For better separation of concerns.
+// AggregateStore needs to be implemented for specific infrastructure, such as an adapter.
+// AggregateRepository does some housekeeping actions, such as building the aggregate from the registry and applying events to the aggregate.
 type AggregateStore interface {
 	Load(ctx context.Context, aggregate EventSourcedAggregate) error
 	Save(ctx context.Context, aggregate EventSourcedAggregate) error
